@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "LazorKit Ticket Demo",
+    "slug": "lazorkit-ticket-demo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "scheme": "lazorkit-ticket",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lazorkit.ticketdemo",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "This app uses Face ID to authenticate and authorize transactions.",
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["lazorkit-ticket"]
+          }
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ],
+      "package": "com.lazorkit.ticketdemo",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "lazorkit-ticket"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID."
+        }
+      ]
+    ]
+  }
+}
