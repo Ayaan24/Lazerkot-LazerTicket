@@ -3,10 +3,10 @@
  * Reusable header with profile and search or back button
  */
 
+import { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
 
 interface HeaderProps {
   greeting?: string;
@@ -15,6 +15,7 @@ interface HeaderProps {
   showBack?: boolean;
   onSearchPress?: () => void;
   onBackPress?: () => void;
+  onSearchChange?: (text: string) => void;
 }
 
 export default function Header({ 
@@ -23,16 +24,24 @@ export default function Header({
   showSearch = false,
   showBack = false,
   onSearchPress,
-  onBackPress
+  onBackPress,
+  onSearchChange
 }: HeaderProps) {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchText, setSearchText] = useState('');
 
   const handleBack = () => {
     if (onBackPress) {
       onBackPress();
     } else {
       router.back();
+    }
+  };
+
+  const handleSearchChange = (text: string) => {
+    setSearchText(text);
+    if (onSearchChange) {
+      onSearchChange(text);
     }
   };
 
@@ -49,7 +58,7 @@ export default function Header({
   }
 
   return (
-    <View>
+    <View style={styles.headerContainer}>
       <View style={styles.header}>
         <View style={styles.profileSection}>
           <View style={styles.profileCircle}>
@@ -68,13 +77,9 @@ export default function Header({
             style={styles.searchInput}
             placeholder="Search events..."
             placeholderTextColor="#999999"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={() => {
-              if (onSearchPress) {
-                onSearchPress();
-              }
-            }}
+            value={searchText}
+            onChangeText={handleSearchChange}
+            onFocus={onSearchPress}
           />
         </View>
       )}
@@ -83,6 +88,9 @@ export default function Header({
 }
 
 const styles = StyleSheet.create({
+  headerContainer: {
+    marginBottom: 24,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -126,8 +134,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333333',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 24,
+    height: 48,
   },
   searchIcon: {
     marginRight: 12,
@@ -136,7 +143,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#FFFFFF',
-    padding: 0,
+    paddingVertical: 0,
   },
   headerTitle: {
     fontSize: 20,

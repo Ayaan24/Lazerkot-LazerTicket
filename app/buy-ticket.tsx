@@ -14,7 +14,7 @@ import {
   Alert,
   SafeAreaView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
 import { signAndSendTransactionWithPasskey, LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
 import {
@@ -27,25 +27,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Ionicons } from '@expo/vector-icons';
-
-// Mock event data
-const MOCK_EVENT = {
-  id: 'summer-festival-2024',
-  name: 'Summer Music Festival 2024',
-  date: 'July 15, 2024',
-  time: '6:00 PM',
-  location: 'Central Park, New York',
-  price: 50, // USDC
-  organizerWallet: new PublicKey('11111111111111111111111111111112'),
-};
+import { getEventById } from '@/lib/events';
 
 export default function BuyTicketScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const eventId = (params.eventId as string) || 'summer-festival-2024';
+  const event = getEventById(eventId) || getEventById('summer-festival-2024')!;
+  
   const { isConnected, signAndSendTransaction } = useWallet();
   const [walletPublicKey, setWalletPublicKey] = useState<PublicKey | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [testMode, setTestMode] = useState(false);
+  
+  const organizerWallet = new PublicKey('11111111111111111111111111111112');
 
   useEffect(() => {
     checkTestMode();
@@ -89,7 +85,7 @@ export default function BuyTicketScreen() {
         
         await storeTicketData(
           walletPublicKey,
-          MOCK_EVENT.id,
+          event.id,
           false
         );
         
@@ -99,7 +95,10 @@ export default function BuyTicketScreen() {
           [
             {
               text: 'View Ticket',
-              onPress: () => router.replace('/my-ticket'),
+              onPress: () => router.push({
+                pathname: '/my-ticket',
+                params: { eventId: event.id },
+              }),
             },
           ]
         );
@@ -117,13 +116,13 @@ export default function BuyTicketScreen() {
 
       const transferInstructions = await createUSDCTransferInstruction(
         walletPublicKey,
-        MOCK_EVENT.organizerWallet,
-        MOCK_EVENT.price
+        organizerWallet,
+        event.price
       );
 
       const ticketInstructions = await createTicketInstruction(
         walletPublicKey,
-        MOCK_EVENT.id,
+        event.id,
         walletPublicKey
       );
 
@@ -145,7 +144,7 @@ export default function BuyTicketScreen() {
 
       await storeTicketData(
         walletPublicKey,
-        MOCK_EVENT.id,
+        event.id,
         false
       );
 
@@ -155,7 +154,10 @@ export default function BuyTicketScreen() {
         [
           {
             text: 'View Ticket',
-            onPress: () => router.replace('/my-ticket'),
+            onPress: () => router.push({
+              pathname: '/my-ticket',
+              params: { eventId: event.id },
+            }),
           },
         ]
       );
@@ -190,21 +192,21 @@ export default function BuyTicketScreen() {
 
         {/* Event Card */}
         <View style={styles.eventCard}>
-          <Text style={styles.eventName}>{MOCK_EVENT.name}</Text>
+          <Text style={styles.eventName}>{event.name}</Text>
           
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Date</Text>
-            <Text style={styles.detailValue}>{MOCK_EVENT.date}</Text>
+            <Text style={styles.detailValue}>{event.date}</Text>
           </View>
           
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Time</Text>
-            <Text style={styles.detailValue}>{MOCK_EVENT.time}</Text>
+            <Text style={styles.detailValue}>{event.time}</Text>
           </View>
           
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Location</Text>
-            <Text style={styles.detailValue}>{MOCK_EVENT.location}</Text>
+            <Text style={styles.detailValue}>{event.location}</Text>
           </View>
 
           <View style={styles.divider} />
@@ -212,7 +214,7 @@ export default function BuyTicketScreen() {
           <View style={styles.priceSection}>
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>Ticket Price</Text>
-              <Text style={styles.priceValue}>{MOCK_EVENT.price} USDC</Text>
+              <Text style={styles.priceValue}>{event.price} USDC</Text>
             </View>
 
             <View style={styles.priceRow}>
@@ -224,14 +226,14 @@ export default function BuyTicketScreen() {
 
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>{MOCK_EVENT.price} USDC</Text>
+              <Text style={styles.totalValue}>{event.price} USDC</Text>
             </View>
           </View>
         </View>
 
         {/* Info Box */}
         <View style={styles.infoBox}>
-          <Text style={styles.infoIcon}>⚡</Text>
+          <Ionicons name="flash" size={32} color="#FCFC65" style={{ marginBottom: 12 }} />
           <Text style={styles.infoTitle}>Gasless Transaction</Text>
           <Text style={styles.infoText}>
             This purchase uses a gasless transaction sponsored by Paymaster.

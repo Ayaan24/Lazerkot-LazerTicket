@@ -110,7 +110,7 @@ export default function LoginScreen() {
 
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>
-          Sign in with Face ID to access your wallet, buy tickets and enter events{'\n'}
+          Sign in with Face ID to access your tickets{'\n'}
           No wallet, no seed phrases, just your face
         </Text>
 

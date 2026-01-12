@@ -15,7 +15,7 @@ import {
   SafeAreaView,
   Image,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
 import { signWithPasskey, signAndSendTransactionWithPasskey, LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
 import {
@@ -28,15 +28,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Ionicons } from '@expo/vector-icons';
-
-// Mock event data
-const MOCK_EVENT = {
-  id: 'summer-festival-2024',
-  name: 'Summer Music Festival 2024',
-};
+import { getEventById } from '@/lib/events';
 
 export default function EntryScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const eventId = (params.eventId as string) || 'summer-festival-2024';
+  const event = getEventById(eventId) || getEventById('summer-festival-2024')!;
+  
   const { isConnected, signMessage, signAndSendTransaction } = useWallet();
   const [walletPublicKey, setWalletPublicKey] = useState<PublicKey | null>(null);
   const [ticketData, setTicketData] = useState<any>(null);
@@ -79,7 +78,7 @@ export default function EntryScreen() {
 
   async function loadTicketTestMode(publicKey: PublicKey) {
     try {
-      const data = await getTicketData(publicKey, MOCK_EVENT.id);
+      const data = await getTicketData(publicKey, event.id);
       if (!data) {
         Alert.alert('No Ticket', 'You do not have a ticket for this event.');
         router.replace('/events');
@@ -111,7 +110,7 @@ export default function EntryScreen() {
       if (testMode) {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        const onChainTicket = await getTicketData(walletPublicKey, MOCK_EVENT.id);
+        const onChainTicket = await getTicketData(walletPublicKey, event.id);
 
         if (!onChainTicket) {
           throw new Error('Ticket not found on-chain');
@@ -121,7 +120,7 @@ export default function EntryScreen() {
           throw new Error('Ticket has already been used');
         }
 
-        await updateTicketUsed(walletPublicKey, MOCK_EVENT.id, true);
+        await updateTicketUsed(walletPublicKey, event.id, true);
         
         setVerified(true);
         setTicketData({
@@ -152,7 +151,7 @@ export default function EntryScreen() {
         return;
       }
 
-      const challenge = `entry_verification_${MOCK_EVENT.id}_${Date.now()}`;
+      const challenge = `entry_verification_${event.id}_${Date.now()}`;
 
       const signResult = await signWithPasskey(
         challenge,
@@ -160,7 +159,7 @@ export default function EntryScreen() {
         `${LAZORKIT_REDIRECT_URL}?screen=entry&verify=true`
       );
 
-      const onChainTicket = await getTicketData(walletPublicKey, MOCK_EVENT.id);
+      const onChainTicket = await getTicketData(walletPublicKey, event.id);
 
       if (!onChainTicket) {
         throw new Error('Ticket not found on-chain');
@@ -176,7 +175,7 @@ export default function EntryScreen() {
 
       const markUsedInstructions = await markTicketUsedInstruction(
         walletPublicKey,
-        MOCK_EVENT.id,
+        event.id,
         walletPublicKey
       );
 
@@ -194,7 +193,7 @@ export default function EntryScreen() {
 
       console.log('Entry transaction signature:', signature);
 
-      await updateTicketUsed(walletPublicKey, MOCK_EVENT.id, true);
+      await updateTicketUsed(walletPublicKey, event.id, true);
 
       setVerified(true);
       
@@ -258,7 +257,7 @@ export default function EntryScreen() {
         </View>
 
         {/* Event Name */}
-        <Text style={styles.eventName}>{MOCK_EVENT.name}</Text>
+        <Text style={styles.eventName}>{event.name}</Text>
 
         {/* Status Card */}
         <View style={styles.statusCard}>

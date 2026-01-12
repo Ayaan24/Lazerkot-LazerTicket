@@ -13,7 +13,7 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
 import { getTicketData } from '@/lib/solana';
 import { PublicKey } from '@solana/web3.js';
@@ -21,19 +21,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Ionicons } from '@expo/vector-icons';
-
-// Mock event data
-const MOCK_EVENT = {
-  id: 'summer-festival-2024',
-  name: 'Summer Music Festival 2024',
-  date: 'July 15, 2024',
-  time: '6:00 PM',
-  location: 'Central Park, New York',
-  price: 50, // USDC
-};
+import { getEventById } from '@/lib/events';
 
 export default function MyTicketScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const eventId = (params.eventId as string) || 'summer-festival-2024';
+  const event = getEventById(eventId) || getEventById('summer-festival-2024')!;
+  
   const { isConnected } = useWallet();
   const [walletPublicKey, setWalletPublicKey] = useState<PublicKey | null>(null);
   const [ticketData, setTicketData] = useState<any>(null);
@@ -73,7 +68,7 @@ export default function MyTicketScreen() {
 
   async function loadTicketTestMode(publicKey: PublicKey) {
     try {
-      const data = await getTicketData(publicKey, MOCK_EVENT.id);
+      const data = await getTicketData(publicKey, event.id);
       if (!data) {
         router.replace('/events');
         return;
@@ -87,7 +82,10 @@ export default function MyTicketScreen() {
   }
 
   function handleEnterEvent() {
-    router.push('/entry');
+    router.push({
+      pathname: '/entry',
+      params: { eventId: event.id },
+    });
   }
 
   if (loading) {
@@ -116,8 +114,8 @@ export default function MyTicketScreen() {
 
         {/* Date and Route */}
         <View style={styles.dateRouteSection}>
-          <Text style={styles.dateTime}>{MOCK_EVENT.date}, {MOCK_EVENT.time}</Text>
-          <Text style={styles.route}>{MOCK_EVENT.location}</Text>
+          <Text style={styles.dateTime}>{event.date}, {event.time}</Text>
+          <Text style={styles.route}>{event.location}</Text>
         </View>
 
         {/* Ticket Card */}
@@ -141,10 +139,10 @@ export default function MyTicketScreen() {
             <View style={styles.journeySection}>
               <View style={styles.timelineContainer}>
                 <View style={styles.timelineLeft}>
-                  <Text style={styles.timeText}>{MOCK_EVENT.time}</Text>
+                  <Text style={styles.timeText}>{event.time}</Text>
                   <View style={styles.timelineDot} />
-                  <Text style={styles.locationText}>{MOCK_EVENT.location.split(',')[0]}</Text>
-                  <Text style={styles.stationText}>{MOCK_EVENT.location}</Text>
+                  <Text style={styles.locationText}>{event.location.split(',')[0]}</Text>
+                  <Text style={styles.stationText}>{event.location}</Text>
                 </View>
 
                 <View style={styles.timelineCenter}>
@@ -173,15 +171,15 @@ export default function MyTicketScreen() {
             <View style={styles.detailsSection}>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Event</Text>
-                <Text style={styles.detailValue}>Music Festival</Text>
+                <Text style={styles.detailValue}>{event.name}</Text>
               </View>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Type</Text>
-                <Text style={styles.detailValue}>General</Text>
+                <Text style={styles.detailValue}>{event.category}</Text>
               </View>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>Price</Text>
-                <Text style={styles.detailValue}>{MOCK_EVENT.price} USDC</Text>
+                <Text style={styles.detailValue}>{event.price} USDC</Text>
               </View>
             </View>
 

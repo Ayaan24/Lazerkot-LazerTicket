@@ -1,9 +1,9 @@
 /**
  * Events Screen
- * Black background with white text and yellow accents
+ * Displays multiple events with category filtering and search
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -20,31 +20,17 @@ import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-
-// Mock event data
-const MOCK_EVENT = {
-  id: 'summer-festival-2024',
-  name: 'Summer Music Festival',
-  date: 'July 15, 2024',
-  time: '6:00 PM',
-  location: 'Central Park, New York',
-  price: 50, // USDC
-  organizer: 'Sonic Waves Productions',
-  attendees: 125,
-};
-
-// Event categories
-const CATEGORIES = ['All Event', 'Music', 'Sport', 'Theater'];
+import { EVENTS, CATEGORIES, getEventsByCategory, type Event } from '@/lib/events';
 
 export default function EventsScreen() {
   const router = useRouter();
   const { isConnected } = useWallet();
   const [walletPublicKey, setWalletPublicKey] = useState<PublicKey | null>(null);
-  const [hasTicket, setHasTicket] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [ticketUsed, setTicketUsed] = useState(false);
   const [testMode, setTestMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All Event');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [userTickets, setUserTickets] = useState<Record<string, { used: boolean }>>({});
 
   useEffect(() => {
     checkTestMode();
@@ -58,7 +44,7 @@ export default function EventsScreen() {
         const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
         setWalletPublicKey(mockWalletAddress);
         setTestMode(true);
-        await loadWalletAndTicketStatusTestMode(mockWalletAddress);
+        await loadUserTickets(mockWalletAddress);
         setLoading(false);
         return;
       }
@@ -68,81 +54,78 @@ export default function EventsScreen() {
         return;
       }
       setTestMode(false);
-      loadWalletAndTicketStatus();
+      const mockPublicKey = new PublicKey('11111111111111111111111111111112');
+      setWalletPublicKey(mockPublicKey);
+      await loadUserTickets(mockPublicKey);
+      setLoading(false);
     } catch (error) {
       console.error('Error checking test mode:', error);
       if (!isConnected) {
         router.replace('/login');
         return;
       }
-      loadWalletAndTicketStatus();
-    }
-  }
-
-  async function loadWalletAndTicketStatusTestMode(mockPublicKey: PublicKey) {
-    try {
-      const ticketExistsResult = await ticketExists(mockPublicKey, MOCK_EVENT.id);
-      if (ticketExistsResult) {
-        const ticketData = await getTicketData(mockPublicKey, MOCK_EVENT.id);
-        if (ticketData) {
-          setHasTicket(true);
-          setTicketUsed(ticketData.used);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading ticket status in test mode:', error);
-    }
-  }
-
-  async function loadWalletAndTicketStatus() {
-    try {
-      const testModeEnabled = await AsyncStorage.getItem('test_mode');
-      if (testModeEnabled === 'enabled') {
-        const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
-        setWalletPublicKey(mockWalletAddress);
-        setTestMode(true);
-        
-        const ticketExistsResult = await ticketExists(mockWalletAddress, MOCK_EVENT.id);
-        if (ticketExistsResult) {
-          const ticketData = await getTicketData(mockWalletAddress, MOCK_EVENT.id);
-          if (ticketData) {
-            setHasTicket(true);
-            setTicketUsed(ticketData.used);
-          }
-        }
-        setLoading(false);
-        return;
-      }
-
-      if (!isConnected) {
-        router.replace('/login');
-        return;
-      }
-
-      const mockPublicKey = new PublicKey('11111111111111111111111111111112');
-      setWalletPublicKey(mockPublicKey);
-
-      const ticketExistsResult = await ticketExists(mockPublicKey, MOCK_EVENT.id);
-      if (ticketExistsResult) {
-        const ticketData = await getTicketData(mockPublicKey, MOCK_EVENT.id);
-        if (ticketData) {
-          setHasTicket(true);
-          setTicketUsed(ticketData.used);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading wallet status:', error);
-    } finally {
       setLoading(false);
     }
   }
 
-  function handleBuyTicket() {
-    router.push('/buy-ticket');
+  async function loadUserTickets(publicKey: PublicKey) {
+    try {
+      const tickets: Record<string, { used: boolean }> = {};
+      for (const event of EVENTS) {
+        const ticketExistsResult = await ticketExists(publicKey, event.id);
+        if (ticketExistsResult) {
+          const ticketData = await getTicketData(publicKey, event.id);
+          if (ticketData) {
+            tickets[event.id] = { used: ticketData.used };
+          }
+        }
+      }
+      setUserTickets(tickets);
+    } catch (error) {
+      console.error('Error loading user tickets:', error);
+    }
   }
 
-  function handleViewTicket() {
-    router.push('/my-ticket');
+  const filteredEvents = useMemo(() => {
+    let events = getEventsByCategory(selectedCategory);
+    
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      events = events.filter(event => 
+        event.name.toLowerCase().includes(query) ||
+        event.location.toLowerCase().includes(query) ||
+        event.organizer.toLowerCase().includes(query)
+      );
+    }
+    
+    return events;
+  }, [selectedCategory, searchQuery]);
+
+  function handleEventPress(event: Event) {
+    const hasTicket = !!userTickets[event.id];
+    if (hasTicket) {
+      router.push({
+        pathname: '/my-ticket',
+        params: { eventId: event.id },
+      });
+    } else {
+      router.push({
+        pathname: '/buy-ticket',
+        params: { eventId: event.id },
+      });
+    }
+  }
+
+  function formatDate(dateStr: string) {
+    // Parse date string like "July 15, 2024"
+    const parts = dateStr.split(' ');
+    if (parts.length >= 2) {
+      const day = parts[1].replace(',', '');
+      const month = parts[0].substring(0, 3);
+      return { day, month };
+    }
+    // Fallback
+    return { day: '15', month: 'Jul' };
   }
 
   if (loading) {
@@ -165,6 +148,7 @@ export default function EventsScreen() {
           greeting="Hi, User"
           title="Find your next event."
           showSearch={true}
+          onSearchChange={setSearchQuery}
         />
 
         {/* Categories */}
@@ -197,61 +181,71 @@ export default function EventsScreen() {
 
         {/* Discover Section */}
         <View style={styles.discoverHeader}>
-          <Text style={styles.discoverTitle}>Discover Nearby Events</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>See All</Text>
-          </TouchableOpacity>
+          <Text style={styles.discoverTitle}>
+            {searchQuery ? `Search Results (${filteredEvents.length})` : `Discover Nearby Events (${filteredEvents.length})`}
+          </Text>
         </View>
 
-        {/* Event Card */}
-        <TouchableOpacity
-          style={styles.eventCard}
-          onPress={hasTicket ? handleViewTicket : handleBuyTicket}
-        >
-          <View style={styles.eventCardGradient}>
-            <View style={styles.eventDateCircle}>
-              <Text style={styles.eventDateNumber}>15</Text>
-              <Text style={styles.eventDateMonth}>July</Text>
-            </View>
+        {/* Events List */}
+        {filteredEvents.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No events found</Text>
+            <Text style={styles.emptyStateSubtext}>
+              Try adjusting your search or category filter
+            </Text>
+          </View>
+        ) : (
+          filteredEvents.map((event) => {
+            const hasTicket = !!userTickets[event.id];
+            const ticketUsed = userTickets[event.id]?.used || false;
+            const dateInfo = formatDate(event.date);
             
-            <View style={styles.eventCardContent}>
-              <View style={styles.eventLocation}>
-                <Text style={styles.eventLocationCity}>{MOCK_EVENT.location.split(',')[0]}</Text>
-                <Text style={styles.eventLocationVenue}>{MOCK_EVENT.location.split(',')[1]?.trim()}</Text>
-              </View>
-              <Text style={styles.eventOrganizer}>{MOCK_EVENT.organizer}</Text>
-              <Text style={styles.eventName}>{MOCK_EVENT.name}</Text>
-              
-              <View style={styles.eventFooter}>
-                <View style={styles.attendeesContainer}>
-                  <View style={styles.attendeeCircle} />
-                  <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap]} />
-                  <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap]} />
-                  <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap, styles.attendeeCircleMore]}>
-                    <Text style={styles.attendeeMoreText}>+{MOCK_EVENT.attendees}</Text>
+            return (
+              <TouchableOpacity
+                key={event.id}
+                style={styles.eventCard}
+                onPress={() => handleEventPress(event)}
+              >
+                <View style={styles.eventCardGradient}>
+                  <View style={styles.eventDateCircle}>
+                    <Text style={styles.eventDateNumber}>{dateInfo.day}</Text>
+                    <Text style={styles.eventDateMonth}>{dateInfo.month}</Text>
+                  </View>
+                  
+                  <View style={styles.eventCardContent}>
+                    <View style={styles.eventLocation}>
+                      <Text style={styles.eventLocationCity}>{event.location.split(',')[0]}</Text>
+                      <Text style={styles.eventLocationVenue}>{event.location.split(',')[1]?.trim()}</Text>
+                    </View>
+                    <Text style={styles.eventOrganizer}>{event.organizer}</Text>
+                    <Text style={styles.eventName}>{event.name}</Text>
+                    
+                    <View style={styles.eventFooter}>
+                      <View style={styles.attendeesContainer}>
+                        <View style={styles.attendeeCircle} />
+                        <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap]} />
+                        <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap]} />
+                        <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap, styles.attendeeCircleMore]}>
+                          <Text style={styles.attendeeMoreText}>+{event.attendees}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.eventRightSection}>
+                        {hasTicket && (
+                          <View style={styles.ticketBadge}>
+                            <Text style={styles.ticketBadgeText}>
+                              {ticketUsed ? 'Used' : 'Owned'}
+                            </Text>
+                          </View>
+                        )}
+                        <Text style={styles.eventPrice}>{event.price} USDC</Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
-                {hasTicket && (
-                  <View style={styles.ticketBadge}>
-                    <Text style={styles.ticketBadgeText}>
-                      {ticketUsed ? 'Used' : 'Owned'}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        {/* Action Button */}
-        <TouchableOpacity
-          style={[styles.actionButton, hasTicket && styles.actionButtonSecondary]}
-          onPress={hasTicket ? handleViewTicket : handleBuyTicket}
-        >
-          <Text style={styles.actionButtonText}>
-            {hasTicket ? 'View My Ticket' : 'Buy Ticket'}
-          </Text>
-        </TouchableOpacity>
+              </TouchableOpacity>
+            );
+          })
+        )}
       </ScrollView>
 
       <Footer />
@@ -316,40 +310,40 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   eventCard: {
-    marginBottom: 24,
+    marginBottom: 16,
     borderRadius: 20,
     overflow: 'hidden',
     shadowColor: '#FCFC65',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   eventCardGradient: {
     backgroundColor: '#1A1A1A',
-    padding: 24,
+    padding: 20,
     borderRadius: 20,
-    minHeight: 220,
+    minHeight: 180,
     position: 'relative',
     borderWidth: 1,
     borderColor: '#333333',
   },
   eventDateCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#FCFC65',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   eventDateNumber: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#000000',
   },
   eventDateMonth: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#000000',
     marginTop: -4,
     fontWeight: '600',
@@ -358,28 +352,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   eventLocation: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   eventLocationCity: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#FFFFFF',
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   eventLocationVenue: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#CCCCCC',
   },
   eventOrganizer: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#999999',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   eventName: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   eventFooter: {
     flexDirection: 'row',
@@ -392,9 +386,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   attendeeCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#FCFC65',
     borderWidth: 2,
     borderColor: '#1A1A1A',
@@ -410,42 +404,44 @@ const styles = StyleSheet.create({
     borderColor: '#1A1A1A',
   },
   attendeeMoreText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
+  eventRightSection: {
+    alignItems: 'flex-end',
+  },
   ticketBadge: {
     backgroundColor: '#FCFC65',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginBottom: 4,
   },
   ticketBadgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: '#000000',
   },
-  actionButton: {
-    backgroundColor: '#FCFC65',
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginTop: 24,
-    shadowColor: '#FCFC65',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  actionButtonSecondary: {
-    backgroundColor: '#1A1A1A',
-    borderWidth: 2,
-    borderColor: '#FCFC65',
-  },
-  actionButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
+  eventPrice: {
+    fontSize: 14,
     fontWeight: '700',
+    color: '#FCFC65',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999999',
   },
   loadingText: {
     marginTop: 16,
