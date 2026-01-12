@@ -24,7 +24,7 @@ export default function Footer() {
             <Ionicons name="home" size={24} color="#000000" />
           </View>
         ) : (
-          <Ionicons name="home-outline" size={24} color="#FFFFFF" />
+          <Ionicons name="home-outline" size={24} color="#000000" />
         )}
       </TouchableOpacity>
       
@@ -37,16 +37,16 @@ export default function Footer() {
             <MaterialIcons name="local-activity" size={24} color="#000000" />
           </View>
         ) : (
-          <MaterialIcons name="local-activity" size={24} color="#FFFFFF" />
+          <MaterialIcons name="local-activity" size={24} color="#000000" />
         )}
       </TouchableOpacity>
       
       <TouchableOpacity style={styles.footerButton}>
-        <Ionicons name="calendar-outline" size={24} color="#FFFFFF" />
+        <Ionicons name="calendar-outline" size={24} color="#000000" />
       </TouchableOpacity>
       
       <TouchableOpacity style={styles.footerButton}>
-        <Ionicons name="settings-outline" size={24} color="#FFFFFF" />
+        <Ionicons name="settings-outline" size={24} color="#000000" />
       </TouchableOpacity>
     </View>
   );
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     right: 20,
-    backgroundColor: 'rgba(30, 30, 60, 0.95)',
+    backgroundColor: '#fcfc65',
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
