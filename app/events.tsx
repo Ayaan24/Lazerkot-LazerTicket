@@ -12,6 +12,8 @@ import {
   ActivityIndicator,
   ScrollView,
   SafeAreaView,
+  Image,
+  ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
@@ -231,42 +233,50 @@ export default function EventsScreen() {
                 style={styles.eventCard}
                 onPress={() => handleEventPress(event)}
               >
-                <View style={styles.eventCardGradient}>
-                  <View style={styles.eventDateCircle}>
-                    <Text style={styles.eventDateNumber}>{dateInfo.day}</Text>
-                    <Text style={styles.eventDateMonth}>{dateInfo.month}</Text>
-                  </View>
-                  
-                  <View style={styles.eventCardContent}>
-                    <View style={styles.eventLocation}>
-                      <Text style={styles.eventLocationCity}>{event.location.split(',')[0]}</Text>
-                      <Text style={styles.eventLocationVenue}>{event.location.split(',')[1]?.trim()}</Text>
+                <ImageBackground
+                  source={{ uri: event.image || 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800' }}
+                  style={styles.eventCardBackground}
+                  imageStyle={styles.eventCardImage}
+                  resizeMode="cover"
+                >
+                  <View style={styles.eventCardOverlay} />
+                  <View style={styles.eventCardGradient}>
+                    <View style={styles.eventDateCircle}>
+                      <Text style={styles.eventDateNumber}>{dateInfo.day}</Text>
+                      <Text style={styles.eventDateMonth}>{dateInfo.month}</Text>
                     </View>
-                    <Text style={styles.eventOrganizer}>{event.organizer}</Text>
-                    <Text style={styles.eventName}>{event.name}</Text>
                     
-                    <View style={styles.eventFooter}>
-                      <View style={styles.attendeesContainer}>
-                        <View style={styles.attendeeCircle} />
-                        <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap]} />
-                        <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap]} />
-                        <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap, styles.attendeeCircleMore]}>
-                          <Text style={styles.attendeeMoreText}>+{event.attendees}</Text>
+                    <View style={styles.eventCardContent}>
+                      <View style={styles.eventLocation}>
+                        <Text style={styles.eventLocationCity}>{event.location.split(',')[0]}</Text>
+                        <Text style={styles.eventLocationVenue}>{event.location.split(',')[1]?.trim()}</Text>
+                      </View>
+                      <Text style={styles.eventOrganizer}>{event.organizer}</Text>
+                      <Text style={styles.eventName}>{event.name}</Text>
+                      
+                      <View style={styles.eventFooter}>
+                        <View style={styles.attendeesContainer}>
+                          <View style={styles.attendeeCircle} />
+                          <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap]} />
+                          <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap]} />
+                          <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap, styles.attendeeCircleMore]}>
+                            <Text style={styles.attendeeMoreText}>+{event.attendees}</Text>
+                          </View>
+                        </View>
+                        <View style={styles.eventRightSection}>
+                          {hasTicket && (
+                            <View style={styles.ticketBadge}>
+                              <Text style={styles.ticketBadgeText}>
+                                {ticketUsed ? 'Used' : 'Owned'}
+                              </Text>
+                            </View>
+                          )}
+                          <Text style={styles.eventPrice}>{event.price} USDC</Text>
                         </View>
                       </View>
-                      <View style={styles.eventRightSection}>
-                        {hasTicket && (
-                          <View style={styles.ticketBadge}>
-                            <Text style={styles.ticketBadgeText}>
-                              {ticketUsed ? 'Used' : 'Owned'}
-                            </Text>
-                          </View>
-                        )}
-                        <Text style={styles.eventPrice}>{event.price} USDC</Text>
-                      </View>
                     </View>
                   </View>
-                </View>
+                </ImageBackground>
               </TouchableOpacity>
             );
           })
@@ -344,14 +354,23 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
+  eventCardBackground: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  eventCardImage: {
+    borderRadius: 20,
+  },
+  eventCardOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 20,
+  },
   eventCardGradient: {
-    backgroundColor: '#1A1A1A',
     padding: 20,
     borderRadius: 20,
     minHeight: 180,
     position: 'relative',
-    borderWidth: 1,
-    borderColor: '#333333',
   },
   eventDateCircle: {
     width: 60,

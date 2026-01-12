@@ -28,6 +28,7 @@ export const EVENTS: Event[] = [
     organizer: 'Sonic Waves Productions',
     attendees: 125,
     category: 'Music',
+    image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800',
   },
   {
     id: 'jazz-night-2024',
@@ -39,6 +40,7 @@ export const EVENTS: Event[] = [
     organizer: 'Jazz Collective',
     attendees: 89,
     category: 'Music',
+    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
   },
   {
     id: 'rock-concert-2024',
@@ -50,6 +52,7 @@ export const EVENTS: Event[] = [
     organizer: 'Rock Nation',
     attendees: 250,
     category: 'Music',
+    image: 'https://images.unsplash.com/photo-1501281668745-f7f00a1761d9?w=800',
   },
   {
     id: 'electronic-fest-2024',
@@ -61,6 +64,7 @@ export const EVENTS: Event[] = [
     organizer: 'EDM Events',
     attendees: 180,
     category: 'Music',
+    image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800',
   },
   {
     id: 'classical-symphony-2024',
@@ -72,6 +76,7 @@ export const EVENTS: Event[] = [
     organizer: 'New York Philharmonic',
     attendees: 95,
     category: 'Music',
+    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
   },
   {
     id: 'indie-pop-2024',
@@ -83,6 +88,7 @@ export const EVENTS: Event[] = [
     organizer: 'Indie Collective',
     attendees: 75,
     category: 'Music',
+    image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800',
   },
   {
     id: 'hip-hop-battle-2024',
@@ -94,6 +100,7 @@ export const EVENTS: Event[] = [
     organizer: 'Hip Hop Nation',
     attendees: 150,
     category: 'Music',
+    image: 'https://images.unsplash.com/photo-1501281668745-f7f00a1761d9?w=800',
   },
   {
     id: 'country-music-2024',
@@ -105,6 +112,7 @@ export const EVENTS: Event[] = [
     organizer: 'Country Road Events',
     attendees: 110,
     category: 'Music',
+    image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800',
   },
   {
     id: 'reggae-festival-2024',
@@ -116,6 +124,7 @@ export const EVENTS: Event[] = [
     organizer: 'Reggae Vibes',
     attendees: 200,
     category: 'Music',
+    image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800',
   },
   {
     id: 'acoustic-session-2024',
@@ -127,6 +136,7 @@ export const EVENTS: Event[] = [
     organizer: 'Acoustic Collective',
     attendees: 60,
     category: 'Music',
+    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800',
   },
 
   // Sport Events (8)
@@ -140,6 +150,7 @@ export const EVENTS: Event[] = [
     organizer: 'NBA Events',
     attendees: 500,
     category: 'Sport',
+    image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800',
   },
   {
     id: 'marathon-2024',
@@ -151,6 +162,7 @@ export const EVENTS: Event[] = [
     organizer: 'NYC Marathon',
     attendees: 1000,
     category: 'Sport',
+    image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=800',
   },
   {
     id: 'tennis-tournament-2024',
@@ -162,6 +174,7 @@ export const EVENTS: Event[] = [
     organizer: 'Tennis Association',
     attendees: 300,
     category: 'Sport',
+    image: 'https://images.unsplash.com/photo-1534158914592-062992fbe900?w=800',
   },
   {
     id: 'soccer-match-2024',
@@ -173,6 +186,7 @@ export const EVENTS: Event[] = [
     organizer: 'MLS Events',
     attendees: 400,
     category: 'Sport',
+    image: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800',
   },
   {
     id: 'boxing-match-2024',
@@ -184,6 +198,7 @@ export const EVENTS: Event[] = [
     organizer: 'Boxing Promotions',
     attendees: 180,
     category: 'Sport',
+    image: 'https://images.unsplash.com/photo-1549717245-0f03df3b0f57?w=800',
   },
   {
     id: 'baseball-game-2024',
@@ -195,6 +210,7 @@ export const EVENTS: Event[] = [
     organizer: 'MLB Events',
     attendees: 450,
     category: 'Sport',
+    image: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=800',
   },
   {
     id: 'cycling-race-2024',
@@ -206,6 +222,7 @@ export const EVENTS: Event[] = [
     organizer: 'Cycling Federation',
     attendees: 250,
     category: 'Sport',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800',
   },
   {
     id: 'yoga-festival-2024',
@@ -217,6 +234,7 @@ export const EVENTS: Event[] = [
     organizer: 'Yoga Collective',
     attendees: 150,
     category: 'Sport',
+    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
   },
 
   // Theater Events (6)
@@ -230,6 +248,7 @@ export const EVENTS: Event[] = [
     organizer: 'Shakespeare Theater',
     attendees: 120,
     category: 'Theater',
+    image: 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=800',
   },
   {
     id: 'musical-wicked-2024',
@@ -241,6 +260,7 @@ export const EVENTS: Event[] = [
     organizer: 'Broadway Productions',
     attendees: 200,
     category: 'Theater',
+    image: 'https://images.unsplash.com/photo-1514306191717-452ec28c7814?w=800',
   },
   {
     id: 'comedy-play-2024',
@@ -252,6 +272,7 @@ export const EVENTS: Event[] = [
     organizer: 'Comedy Theater Group',
     attendees: 100,
     category: 'Theater',
+    image: 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=800',
   },
   {
     id: 'dance-performance-2024',
@@ -263,6 +284,7 @@ export const EVENTS: Event[] = [
     organizer: 'Dance Collective',
     attendees: 85,
     category: 'Theater',
+    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800',
   },
   {
     id: 'opera-night-2024',
@@ -274,6 +296,7 @@ export const EVENTS: Event[] = [
     organizer: 'Met Opera',
     attendees: 140,
     category: 'Theater',
+    image: 'https://images.unsplash.com/photo-1514306191717-452ec28c7814?w=800',
   },
   {
     id: 'drama-show-2024',
@@ -285,6 +308,7 @@ export const EVENTS: Event[] = [
     organizer: 'Drama Society',
     attendees: 90,
     category: 'Theater',
+    image: 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=800',
   },
 
   // Comedy Events (3)
@@ -298,6 +322,7 @@ export const EVENTS: Event[] = [
     organizer: 'Comedy Club',
     attendees: 80,
     category: 'Comedy',
+    image: 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=800',
   },
   {
     id: 'improv-show-2024',
@@ -309,6 +334,7 @@ export const EVENTS: Event[] = [
     organizer: 'Improv Collective',
     attendees: 70,
     category: 'Comedy',
+    image: 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=800',
   },
   {
     id: 'comedy-festival-2024',
@@ -320,6 +346,7 @@ export const EVENTS: Event[] = [
     organizer: 'Comedy Fest',
     attendees: 95,
     category: 'Comedy',
+    image: 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=800',
   },
 
   // Art Events (3)
@@ -333,6 +360,7 @@ export const EVENTS: Event[] = [
     organizer: 'Museum of Modern Art',
     attendees: 200,
     category: 'Art',
+    image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800',
   },
   {
     id: 'photography-show-2024',
@@ -344,6 +372,7 @@ export const EVENTS: Event[] = [
     organizer: 'Photography Society',
     attendees: 120,
     category: 'Art',
+    image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800',
   },
   {
     id: 'street-art-tour-2024',
@@ -355,6 +384,7 @@ export const EVENTS: Event[] = [
     organizer: 'Art Tours NYC',
     attendees: 60,
     category: 'Art',
+    image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800',
   },
 
   // Food Events (2)
@@ -368,6 +398,7 @@ export const EVENTS: Event[] = [
     organizer: 'Food Fest NYC',
     attendees: 500,
     category: 'Food',
+    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800',
   },
   {
     id: 'wine-tasting-2024',
@@ -379,6 +410,7 @@ export const EVENTS: Event[] = [
     organizer: 'Wine Society',
     attendees: 100,
     category: 'Food',
+    image: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800',
   },
 
   // Tech Events (2)
@@ -392,6 +424,7 @@ export const EVENTS: Event[] = [
     organizer: 'Tech Events Inc',
     attendees: 800,
     category: 'Tech',
+    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2e87a?w=800',
   },
   {
     id: 'startup-pitch-2024',
@@ -403,6 +436,7 @@ export const EVENTS: Event[] = [
     organizer: 'Startup Hub',
     attendees: 150,
     category: 'Tech',
+    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800',
   },
 ];
 
