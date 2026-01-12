@@ -128,15 +128,6 @@ export default function EventsScreen() {
     return { day: '15', month: 'Jul' };
   }
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#FCFC65" />
-        <Text style={styles.loadingText}>Loading events...</Text>
-      </SafeAreaView>
-    );
-  }
-
   if (!walletPublicKey && !testMode) {
     return null;
   }
@@ -166,6 +157,7 @@ export default function EventsScreen() {
                 selectedCategory === category && styles.categoryButtonActive,
               ]}
               onPress={() => setSelectedCategory(category)}
+              disabled={loading}
             >
               <Text
                 style={[
@@ -182,12 +174,45 @@ export default function EventsScreen() {
         {/* Discover Section */}
         <View style={styles.discoverHeader}>
           <Text style={styles.discoverTitle}>
-            {searchQuery ? `Search Results (${filteredEvents.length})` : `Discover Nearby Events (${filteredEvents.length})`}
+            {loading 
+              ? 'Discover Nearby Events' 
+              : searchQuery 
+                ? `Search Results (${filteredEvents.length})` 
+                : `Discover Nearby Events (${filteredEvents.length})`
+            }
           </Text>
         </View>
 
         {/* Events List */}
-        {filteredEvents.length === 0 ? (
+        {loading ? (
+          // Skeleton loading placeholders
+          [...Array(5)].map((_, index) => (
+            <View key={`skeleton-${index}`} style={styles.eventCard}>
+              <View style={styles.eventCardGradient}>
+                <View style={[styles.eventDateCircle, styles.skeletonCircle]} />
+                
+                <View style={styles.eventCardContent}>
+                  <View style={styles.eventLocation}>
+                    <View style={[styles.skeletonLine, { width: '60%', marginBottom: 8 }]} />
+                    <View style={[styles.skeletonLine, { width: '40%' }]} />
+                  </View>
+                  <View style={[styles.skeletonLine, { width: '50%', marginBottom: 8 }]} />
+                  <View style={[styles.skeletonLine, { width: '80%', height: 24, marginBottom: 12 }]} />
+                  
+                  <View style={styles.eventFooter}>
+                    <View style={styles.attendeesContainer}>
+                      <View style={[styles.attendeeCircle, styles.skeletonCircle]} />
+                      <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap, styles.skeletonCircle]} />
+                      <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap, styles.skeletonCircle]} />
+                      <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap, styles.skeletonCircle]} />
+                    </View>
+                    <View style={[styles.skeletonLine, { width: 60, height: 16 }]} />
+                  </View>
+                </View>
+              </View>
+            </View>
+          ))
+        ) : filteredEvents.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>No events found</Text>
             <Text style={styles.emptyStateSubtext}>
@@ -447,5 +472,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: '#FFFFFF',
     fontSize: 14,
+  },
+  skeletonLine: {
+    height: 14,
+    backgroundColor: '#333333',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonCircle: {
+    backgroundColor: '#333333',
   },
 });
