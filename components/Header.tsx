@@ -3,9 +3,10 @@
  * Reusable header with profile and search or back button
  */
 
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 
 interface HeaderProps {
   greeting?: string;
@@ -25,6 +26,7 @@ export default function Header({
   onBackPress
 }: HeaderProps) {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleBack = () => {
     if (onBackPress) {
@@ -47,20 +49,34 @@ export default function Header({
   }
 
   return (
-    <View style={styles.header}>
-      <View style={styles.profileSection}>
-        <View style={styles.profileCircle}>
-          <Text style={styles.profileInitial}>U</Text>
-        </View>
-        <View>
-          <Text style={styles.greeting}>{greeting}</Text>
-          <Text style={styles.mainTitle}>{title}</Text>
+    <View>
+      <View style={styles.header}>
+        <View style={styles.profileSection}>
+          <View style={styles.profileCircle}>
+            <Text style={styles.profileInitial}>U</Text>
+          </View>
+          <View>
+            <Text style={styles.greeting}>{greeting}</Text>
+            <Text style={styles.mainTitle}>{title}</Text>
+          </View>
         </View>
       </View>
       {showSearch && (
-        <TouchableOpacity style={styles.searchButton} onPress={onSearchPress}>
-          <Ionicons name="search" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
+        <View style={styles.searchBarContainer}>
+          <Ionicons name="search" size={20} color="#999999" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search events..."
+            placeholderTextColor="#999999"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onSubmitEditing={() => {
+              if (onSearchPress) {
+                onSearchPress();
+              }
+            }}
+          />
+        </View>
       )}
     </View>
   );
@@ -71,7 +87,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   profileSection: {
     flexDirection: 'row',
@@ -102,15 +118,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
-  searchButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#1A1A1A',
-    justifyContent: 'center',
+  searchBarContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#333333',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 24,
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#FFFFFF',
+    padding: 0,
   },
   headerTitle: {
     fontSize: 20,
