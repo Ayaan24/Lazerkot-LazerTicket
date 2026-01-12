@@ -12,12 +12,14 @@ import {
   ActivityIndicator,
   Alert,
   SafeAreaView,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
 import { LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
 import * as LocalAuthentication from 'expo-local-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -97,12 +99,13 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {/* Logo/Icon */}
+        {/* Logo */}
         <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>🎫</Text>
-          </View>
-          <View style={styles.logoGlow} />
+          <Image 
+            source={require('@/assets/lt.png')} 
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={styles.title}>Welcome Back</Text>
@@ -114,15 +117,15 @@ export default function LoginScreen() {
         {/* Features List */}
         <View style={styles.featuresContainer}>
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🔐</Text>
+            <Ionicons name="lock-closed" size={24} color="#FCFC65" />
             <Text style={styles.featureText}>Secure biometric authentication</Text>
           </View>
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>⚡</Text>
+            <Ionicons name="flash" size={24} color="#FCFC65" />
             <Text style={styles.featureText}>Gasless transactions</Text>
           </View>
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🎯</Text>
+            <Ionicons name="checkmark-circle" size={24} color="#FCFC65" />
             <Text style={styles.featureText}>Smart wallet auto-created</Text>
           </View>
         </View>
@@ -139,7 +142,7 @@ export default function LoginScreen() {
             <ActivityIndicator color="#000000" />
           ) : (
             <>
-              <Text style={styles.buttonIcon}>🔐</Text>
+              <Ionicons name="lock-closed" size={24} color="#000000" style={{ marginRight: 12 }} />
               <Text style={styles.buttonText}>Sign in with Face ID</Text>
             </>
           )}
@@ -147,7 +150,7 @@ export default function LoginScreen() {
 
         {!biometricAvailable && (
           <View style={styles.warningBox}>
-            <Text style={styles.warningIcon}>⚠️</Text>
+            <Ionicons name="warning" size={20} color="#FCFC65" style={{ marginRight: 12 }} />
             <Text style={styles.warningText}>
               Biometric authentication is not available. Please enable Face ID / Touch ID in settings.
             </Text>
@@ -167,7 +170,10 @@ export default function LoginScreen() {
             }
           }}
         >
-          <Text style={styles.testButtonText}>🚀 Test Mode</Text>
+          <View style={styles.testButtonContent}>
+            <Ionicons name="rocket" size={20} color="#FCFC65" style={{ marginRight: 8 }} />
+            <Text style={styles.testButtonText}>Test Mode</Text>
+          </View>
           <Text style={styles.testButtonSubtext}>Skip authentication for testing</Text>
         </TouchableOpacity>
       </View>
@@ -189,47 +195,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoContainer: {
-    marginBottom: 40,
+    
     alignItems: 'center',
-    position: 'relative',
-  },
-  logoCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#FCFC65',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#FCFC65',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 10,
   },
-  logoGlow: {
-    position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: '#FCFC65',
-    opacity: 0.2,
-    top: -10,
-  },
-  logoText: {
-    fontSize: 60,
+  logoImage: {
+    width: 200,
+    height: 100,
+    marginTop: 20,
   },
   title: {
     fontSize: 36,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 16,
+    marginBottom: 20,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: '#CCCCCC',
-    marginBottom: 40,
+    marginBottom: 30,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -246,10 +231,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#333333',
-  },
-  featureIcon: {
-    fontSize: 24,
-    marginRight: 16,
   },
   featureText: {
     fontSize: 14,
@@ -276,10 +257,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#333333',
     shadowOpacity: 0,
   },
-  buttonIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
   buttonText: {
     color: '#000000',
     fontSize: 18,
@@ -295,10 +272,6 @@ const styles = StyleSheet.create({
     borderColor: '#333333',
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  warningIcon: {
-    fontSize: 20,
-    marginRight: 12,
   },
   warningText: {
     fontSize: 13,
@@ -318,11 +291,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#1A1A1A',
   },
+  testButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   testButtonText: {
     color: '#FCFC65',
     fontSize: 16,
     fontWeight: '700',
-    marginBottom: 4,
   },
   testButtonSubtext: {
     color: '#999999',

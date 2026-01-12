@@ -5,6 +5,7 @@
 
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 interface HeaderProps {
   greeting?: string;
@@ -37,7 +38,7 @@ export default function Header({
     return (
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack}>
-          <Text style={styles.backIcon}>←</Text>
+          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{title}</Text>
         <View style={styles.headerSpacer} />
@@ -58,7 +59,7 @@ export default function Header({
       </View>
       {showSearch && (
         <TouchableOpacity style={styles.searchButton} onPress={onSearchPress}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons name="search" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       )}
     </View>
@@ -110,14 +111,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#333333',
-  },
-  searchIcon: {
-    fontSize: 20,
-  },
-  backIcon: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
   },
   headerTitle: {
     fontSize: 20,

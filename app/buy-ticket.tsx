@@ -26,6 +26,7 @@ import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Ionicons } from '@expo/vector-icons';
 
 // Mock event data
 const MOCK_EVENT = {
@@ -248,7 +249,7 @@ export default function BuyTicketScreen() {
             <ActivityIndicator color="#000000" />
           ) : (
             <>
-              <Text style={styles.buttonIcon}>🔐</Text>
+              <Ionicons name="lock-closed" size={24} color="#000000" style={{ marginRight: 12 }} />
               <Text style={styles.confirmButtonText}>
                 Confirm with Face ID
               </Text>
@@ -359,10 +360,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FCFC65',
   },
-  infoIcon: {
-    fontSize: 32,
-    marginBottom: 12,
-  },
   infoTitle: {
     fontSize: 16,
     fontWeight: '700',
@@ -391,10 +388,6 @@ const styles = StyleSheet.create({
   confirmButtonDisabled: {
     backgroundColor: '#CCCCCC',
     shadowOpacity: 0,
-  },
-  buttonIcon: {
-    fontSize: 24,
-    marginRight: 12,
   },
   confirmButtonText: {
     color: '#000000',

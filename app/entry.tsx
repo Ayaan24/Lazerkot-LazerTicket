@@ -13,6 +13,7 @@ import {
   ScrollView,
   Alert,
   SafeAreaView,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
@@ -26,6 +27,7 @@ import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Ionicons } from '@expo/vector-icons';
 
 // Mock event data
 const MOCK_EVENT = {
@@ -246,6 +248,15 @@ export default function EntryScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <Header title="Entry Verification" showBack={true} />
 
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image 
+            source={require('@/assets/lt.png')} 
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+        </View>
+
         {/* Event Name */}
         <Text style={styles.eventName}>{MOCK_EVENT.name}</Text>
 
@@ -290,7 +301,7 @@ export default function EntryScreen() {
         {/* Verification Section */}
         {!verified && !denied && (
           <View style={styles.verificationSection}>
-            <Text style={styles.verificationIcon}>🔐</Text>
+            <Ionicons name="lock-closed" size={48} color="#FCFC65" style={{ marginBottom: 16 }} />
             <Text style={styles.verificationTitle}>Verify Your Identity</Text>
             <Text style={styles.verificationText}>
               Use Face ID to verify your identity and prove ticket ownership.
@@ -309,7 +320,7 @@ export default function EntryScreen() {
                 <ActivityIndicator color="#000000" />
               ) : (
                 <>
-                  <Text style={styles.buttonIcon}>🔐</Text>
+                  <Ionicons name="lock-closed" size={24} color="#000000" style={{ marginRight: 12 }} />
                   <Text style={styles.verifyButtonText}>
                     Verify Entry with Face ID
                   </Text>
@@ -349,11 +360,21 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
   },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  logoImage: {
+    width: 200,
+    height: 80,
+  },
   eventName: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 20,
+    textAlign: 'center',
   },
   statusCard: {
     backgroundColor: '#1A1A1A',
@@ -453,10 +474,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#333333',
   },
-  verificationIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
   verificationTitle: {
     fontSize: 20,
     fontWeight: '700',
@@ -489,10 +506,6 @@ const styles = StyleSheet.create({
   verifyButtonDisabled: {
     backgroundColor: '#CCCCCC',
     shadowOpacity: 0,
-  },
-  buttonIcon: {
-    fontSize: 24,
-    marginRight: 12,
   },
   verifyButtonText: {
     color: '#000000',

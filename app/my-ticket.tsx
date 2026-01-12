@@ -20,6 +20,7 @@ import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Ionicons } from '@expo/vector-icons';
 
 // Mock event data
 const MOCK_EVENT = {
@@ -149,7 +150,7 @@ export default function MyTicketScreen() {
                 <View style={styles.timelineCenter}>
                   <Text style={styles.durationText}>Event</Text>
                   <View style={styles.eventIcon}>
-                    <Text style={styles.eventIconText}>🎵</Text>
+                    <Ionicons name="musical-notes" size={20} color="#000000" />
                   </View>
                 </View>
 
@@ -380,9 +381,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FCFC65',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  eventIconText: {
-    fontSize: 20,
   },
   bookingSection: {
     marginBottom: 24,
