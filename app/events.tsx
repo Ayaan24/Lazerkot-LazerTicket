@@ -1,6 +1,6 @@
 /**
  * Events Screen
- * Displays available events and allows ticket purchase
+ * Black background with white text and yellow accents
  */
 
 import { useState, useEffect } from 'react';
@@ -11,23 +11,30 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
-import { getWalletAddress, convertWalletInfo } from '@/lib/lazorkit';
 import { ticketExists, getTicketData } from '@/lib/solana';
 import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
-// Mock event data (hardcoded as per requirements)
+// Mock event data
 const MOCK_EVENT = {
   id: 'summer-festival-2024',
-  name: 'Summer Music Festival 2024',
+  name: 'Summer Music Festival',
   date: 'July 15, 2024',
   time: '6:00 PM',
   location: 'Central Park, New York',
   price: 50, // USDC
+  organizer: 'Sonic Waves Productions',
+  attendees: 125,
 };
+
+// Event categories
+const CATEGORIES = ['All Event', 'Music', 'Sport', 'Theater'];
 
 export default function EventsScreen() {
   const router = useRouter();
@@ -37,6 +44,7 @@ export default function EventsScreen() {
   const [loading, setLoading] = useState(true);
   const [ticketUsed, setTicketUsed] = useState(false);
   const [testMode, setTestMode] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All Event');
 
   useEffect(() => {
     checkTestMode();
@@ -44,11 +52,9 @@ export default function EventsScreen() {
 
   async function checkTestMode() {
     try {
-      // Check if test mode is enabled for local testing
       const testModeEnabled = await AsyncStorage.getItem('test_mode');
       
       if (testModeEnabled === 'enabled') {
-        // In test mode, create a mock wallet address for testing
         const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
         setWalletPublicKey(mockWalletAddress);
         setTestMode(true);
@@ -57,7 +63,6 @@ export default function EventsScreen() {
         return;
       }
 
-      // Normal mode: require wallet connection
       if (!isConnected) {
         router.replace('/login');
         return;
@@ -66,7 +71,6 @@ export default function EventsScreen() {
       loadWalletAndTicketStatus();
     } catch (error) {
       console.error('Error checking test mode:', error);
-      // Fall back to normal mode
       if (!isConnected) {
         router.replace('/login');
         return;
@@ -77,17 +81,9 @@ export default function EventsScreen() {
 
   async function loadWalletAndTicketStatusTestMode(mockPublicKey: PublicKey) {
     try {
-      // Check if user already has a ticket in test mode
-      const ticketExistsResult = await ticketExists(
-        mockPublicKey,
-        MOCK_EVENT.id
-      );
-
+      const ticketExistsResult = await ticketExists(mockPublicKey, MOCK_EVENT.id);
       if (ticketExistsResult) {
-        const ticketData = await getTicketData(
-          mockPublicKey,
-          MOCK_EVENT.id
-        );
+        const ticketData = await getTicketData(mockPublicKey, MOCK_EVENT.id);
         if (ticketData) {
           setHasTicket(true);
           setTicketUsed(ticketData.used);
@@ -100,23 +96,15 @@ export default function EventsScreen() {
 
   async function loadWalletAndTicketStatus() {
     try {
-      // In test mode, use mock wallet
       const testModeEnabled = await AsyncStorage.getItem('test_mode');
       if (testModeEnabled === 'enabled') {
         const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
         setWalletPublicKey(mockWalletAddress);
         setTestMode(true);
         
-        const ticketExistsResult = await ticketExists(
-          mockWalletAddress,
-          MOCK_EVENT.id
-        );
-        
+        const ticketExistsResult = await ticketExists(mockWalletAddress, MOCK_EVENT.id);
         if (ticketExistsResult) {
-          const ticketData = await getTicketData(
-            mockWalletAddress,
-            MOCK_EVENT.id
-          );
+          const ticketData = await getTicketData(mockWalletAddress, MOCK_EVENT.id);
           if (ticketData) {
             setHasTicket(true);
             setTicketUsed(ticketData.used);
@@ -126,28 +114,17 @@ export default function EventsScreen() {
         return;
       }
 
-      // Normal mode: require wallet connection
       if (!isConnected) {
         router.replace('/login');
         return;
       }
 
-      // For now, in normal mode, use a placeholder until wallet is available
-      // In production, get actual wallet from SDK
       const mockPublicKey = new PublicKey('11111111111111111111111111111112');
       setWalletPublicKey(mockPublicKey);
 
-      // Check if user already has a ticket
-      const ticketExistsResult = await ticketExists(
-        mockPublicKey,
-        MOCK_EVENT.id
-      );
-
+      const ticketExistsResult = await ticketExists(mockPublicKey, MOCK_EVENT.id);
       if (ticketExistsResult) {
-        const ticketData = await getTicketData(
-          mockPublicKey,
-          MOCK_EVENT.id
-        );
+        const ticketData = await getTicketData(mockPublicKey, MOCK_EVENT.id);
         if (ticketData) {
           setHasTicket(true);
           setTicketUsed(ticketData.used);
@@ -161,263 +138,318 @@ export default function EventsScreen() {
   }
 
   function handleBuyTicket() {
-    // Navigate to buy ticket screen
-    // In test mode, walletPublicKey is already set
-    // In normal mode, walletPublicKey should be set from wallet
     router.push('/buy-ticket');
   }
 
   function handleViewTicket() {
-    // Navigate to my ticket screen
     router.push('/my-ticket');
   }
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#6366f1" />
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#FCFC65" />
         <Text style={styles.loadingText}>Loading events...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
-  // Allow test mode or require wallet connection
   if (!walletPublicKey && !testMode) {
     return null;
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.title}>Available Events</Text>
-            <Text style={styles.subtitle}>Browse and purchase tickets</Text>
-          </View>
-          {testMode && (
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        <Header 
+          greeting="Hi, User"
+          title="Find your next event."
+          showSearch={true}
+        />
+
+        {/* Categories */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoriesContainer}
+          contentContainerStyle={styles.categoriesContent}
+        >
+          {CATEGORIES.map((category) => (
             <TouchableOpacity
-              style={styles.testModeBadge}
-              onPress={async () => {
-                await AsyncStorage.removeItem('test_mode');
-                router.replace('/login');
-              }}
+              key={category}
+              style={[
+                styles.categoryButton,
+                selectedCategory === category && styles.categoryButtonActive,
+              ]}
+              onPress={() => setSelectedCategory(category)}
             >
-              <Text style={styles.testModeText}>🧪 TEST MODE</Text>
-              <Text style={styles.testModeSubtext}>Tap to exit</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      <View style={styles.eventCard}>
-        <Text style={styles.eventName}>{MOCK_EVENT.name}</Text>
-        
-        <View style={styles.eventDetails}>
-          <View style={styles.eventRow}>
-            <Text style={styles.eventLabel}>Date:</Text>
-            <Text style={styles.eventValue}>{MOCK_EVENT.date}</Text>
-          </View>
-          
-          <View style={styles.eventRow}>
-            <Text style={styles.eventLabel}>Time:</Text>
-            <Text style={styles.eventValue}>{MOCK_EVENT.time}</Text>
-          </View>
-          
-          <View style={styles.eventRow}>
-            <Text style={styles.eventLabel}>Location:</Text>
-            <Text style={styles.eventValue}>{MOCK_EVENT.location}</Text>
-          </View>
-          
-          <View style={styles.eventRow}>
-            <Text style={styles.eventLabel}>Price:</Text>
-            <Text style={[styles.eventValue, styles.priceText]}>
-              {MOCK_EVENT.price} USDC
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.ticketStatus}>
-          {hasTicket ? (
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>
-                {ticketUsed ? 'Ticket Used' : 'Ticket Owned'}
+              <Text
+                style={[
+                  styles.categoryText,
+                  selectedCategory === category && styles.categoryTextActive,
+                ]}
+              >
+                {category}
               </Text>
-            </View>
-          ) : (
-            <Text style={styles.noTicketText}>No ticket purchased</Text>
-          )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {/* Discover Section */}
+        <View style={styles.discoverHeader}>
+          <Text style={styles.discoverTitle}>Discover Nearby Events</Text>
+          <TouchableOpacity>
+            <Text style={styles.seeAllText}>See All</Text>
+          </TouchableOpacity>
         </View>
 
+        {/* Event Card */}
         <TouchableOpacity
-          style={[
-            styles.actionButton,
-            hasTicket && styles.actionButtonSecondary,
-          ]}
+          style={styles.eventCard}
+          onPress={hasTicket ? handleViewTicket : handleBuyTicket}
+        >
+          <View style={styles.eventCardGradient}>
+            <View style={styles.eventDateCircle}>
+              <Text style={styles.eventDateNumber}>15</Text>
+              <Text style={styles.eventDateMonth}>July</Text>
+            </View>
+            
+            <View style={styles.eventCardContent}>
+              <View style={styles.eventLocation}>
+                <Text style={styles.eventLocationCity}>{MOCK_EVENT.location.split(',')[0]}</Text>
+                <Text style={styles.eventLocationVenue}>{MOCK_EVENT.location.split(',')[1]?.trim()}</Text>
+              </View>
+              <Text style={styles.eventOrganizer}>{MOCK_EVENT.organizer}</Text>
+              <Text style={styles.eventName}>{MOCK_EVENT.name}</Text>
+              
+              <View style={styles.eventFooter}>
+                <View style={styles.attendeesContainer}>
+                  <View style={styles.attendeeCircle} />
+                  <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap]} />
+                  <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap]} />
+                  <View style={[styles.attendeeCircle, styles.attendeeCircleOverlap, styles.attendeeCircleMore]}>
+                    <Text style={styles.attendeeMoreText}>+{MOCK_EVENT.attendees}</Text>
+                  </View>
+                </View>
+                {hasTicket && (
+                  <View style={styles.ticketBadge}>
+                    <Text style={styles.ticketBadgeText}>
+                      {ticketUsed ? 'Used' : 'Owned'}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        {/* Action Button */}
+        <TouchableOpacity
+          style={[styles.actionButton, hasTicket && styles.actionButtonSecondary]}
           onPress={hasTicket ? handleViewTicket : handleBuyTicket}
         >
           <Text style={styles.actionButtonText}>
-            {hasTicket ? 'View Ticket' : 'Buy Ticket'}
+            {hasTicket ? 'View My Ticket' : 'Buy Ticket'}
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
-      <View style={styles.infoSection}>
-        <Text style={styles.infoTitle}>About This Demo</Text>
-        <Text style={styles.infoText}>
-          This is a demonstration of walletless, biometric-first ticket
-          purchase using LazorKit. Your wallet is managed automatically
-          and transactions are gasless.
-        </Text>
-      </View>
-    </ScrollView>
+      <Footer />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#000000',
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     padding: 20,
+    paddingBottom: 100,
   },
-  header: {
+  categoriesContainer: {
     marginBottom: 24,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    flexWrap: 'wrap',
+  categoriesContent: {
+    paddingRight: 20,
   },
-  headerTextContainer: {
-    flex: 1,
-    minWidth: 200,
+  categoryButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: '#1A1A1A',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#333333',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 8,
+  categoryButtonActive: {
+    backgroundColor: '#FCFC65',
+    borderColor: '#FCFC65',
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  eventCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  eventName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 16,
-  },
-  eventDetails: {
-    marginBottom: 16,
-  },
-  eventRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  eventLabel: {
+  categoryText: {
     fontSize: 14,
-    color: '#666',
+    color: '#CCCCCC',
     fontWeight: '500',
   },
-  eventValue: {
-    fontSize: 14,
-    color: '#1a1a1a',
+  categoryTextActive: {
+    color: '#000000',
+    fontWeight: '700',
   },
-  priceText: {
-    fontWeight: 'bold',
-    color: '#6366f1',
-  },
-  ticketStatus: {
-    marginBottom: 20,
+  discoverHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 16,
   },
-  statusBadge: {
-    backgroundColor: '#d1fae5',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+  discoverTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  seeAllText: {
+    fontSize: 14,
+    color: '#FCFC65',
+    fontWeight: '600',
+  },
+  eventCard: {
+    marginBottom: 24,
     borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#FCFC65',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  statusText: {
-    color: '#065f46',
-    fontWeight: '600',
-    fontSize: 14,
+  eventCardGradient: {
+    backgroundColor: '#1A1A1A',
+    padding: 24,
+    borderRadius: 20,
+    minHeight: 220,
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#333333',
   },
-  noTicketText: {
-    color: '#666',
-    fontSize: 14,
-  },
-  actionButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 16,
-    borderRadius: 12,
+  eventDateCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#FCFC65',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 20,
   },
-  actionButtonSecondary: {
-    backgroundColor: '#10b981',
+  eventDateNumber: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#000000',
   },
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 16,
+  eventDateMonth: {
+    fontSize: 12,
+    color: '#000000',
+    marginTop: -4,
     fontWeight: '600',
   },
-  infoSection: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginTop: 10,
+  eventCardContent: {
+    flex: 1,
   },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1a1a1a',
+  eventLocation: {
     marginBottom: 12,
   },
-  infoText: {
+  eventLocationCity: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  eventLocationVenue: {
     fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    color: '#CCCCCC',
+  },
+  eventOrganizer: {
+    fontSize: 13,
+    color: '#999999',
+    marginBottom: 12,
+  },
+  eventName: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 20,
+  },
+  eventFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 'auto',
+  },
+  attendeesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  attendeeCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FCFC65',
+    borderWidth: 2,
+    borderColor: '#1A1A1A',
+    marginLeft: -8,
+  },
+  attendeeCircleOverlap: {
+    marginLeft: -8,
+  },
+  attendeeCircleMore: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#333333',
+    borderColor: '#1A1A1A',
+  },
+  attendeeMoreText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  ticketBadge: {
+    backgroundColor: '#FCFC65',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+  },
+  ticketBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#000000',
+  },
+  actionButton: {
+    backgroundColor: '#FCFC65',
+    paddingVertical: 18,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginTop: 24,
+    shadowColor: '#FCFC65',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  actionButtonSecondary: {
+    backgroundColor: '#1A1A1A',
+    borderWidth: 2,
+    borderColor: '#FCFC65',
+  },
+  actionButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
   },
   loadingText: {
     marginTop: 16,
-    color: '#666',
+    color: '#FFFFFF',
     fontSize: 14,
   },
-  testModeBadge: {
-    backgroundColor: '#fef3c7',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginLeft: 12,
-    alignSelf: 'flex-start',
-    borderWidth: 2,
-    borderColor: '#f59e0b',
-    borderStyle: 'dashed',
-  },
-  testModeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#92400e',
-    marginBottom: 2,
-  },
-  testModeSubtext: {
-    fontSize: 9,
-    color: '#78350f',
-    fontStyle: 'italic',
-  },
 });
-

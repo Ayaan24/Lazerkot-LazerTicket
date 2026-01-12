@@ -1,6 +1,6 @@
 /**
  * Buy Ticket Screen
- * Confirms ticket purchase with Face ID and executes gasless USDC transfer
+ * Modern UI with white, black, and #FCFC65 color scheme
  */
 
 import { useState, useEffect } from 'react';
@@ -12,10 +12,11 @@ import {
   ActivityIndicator,
   ScrollView,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
-import { getWalletAddress, signAndSendTransactionWithPasskey, LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
+import { signAndSendTransactionWithPasskey, LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
 import {
   createUSDCTransferInstruction,
   createTicketInstruction,
@@ -23,6 +24,8 @@ import {
 } from '@/lib/solana';
 import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 // Mock event data
 const MOCK_EVENT = {
@@ -32,7 +35,7 @@ const MOCK_EVENT = {
   time: '6:00 PM',
   location: 'Central Park, New York',
   price: 50, // USDC
-  organizerWallet: new PublicKey('11111111111111111111111111111112'), // Mock organizer (valid Solana address format)
+  organizerWallet: new PublicKey('11111111111111111111111111111112'),
 };
 
 export default function BuyTicketScreen() {
@@ -49,11 +52,9 @@ export default function BuyTicketScreen() {
 
   async function checkTestMode() {
     try {
-      // Check if test mode is enabled for local testing
       const testModeEnabled = await AsyncStorage.getItem('test_mode');
       
       if (testModeEnabled === 'enabled') {
-        // In test mode, use mock wallet address
         const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
         setWalletPublicKey(mockWalletAddress);
         setTestMode(true);
@@ -61,14 +62,11 @@ export default function BuyTicketScreen() {
         return;
       }
 
-      // Normal mode: require wallet connection
       if (!isConnected) {
         router.replace('/login');
         return;
       }
 
-      // For normal mode, use mock wallet for now
-      // In production, get actual wallet from SDK
       const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
       setWalletPublicKey(mockWalletAddress);
       setTestMode(false);
@@ -85,16 +83,13 @@ export default function BuyTicketScreen() {
     setProcessing(true);
 
     try {
-      // In test mode, simulate purchase without actual transaction
       if (testMode) {
-        // Simulate successful purchase for testing
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Store ticket in demo storage
         await storeTicketData(
           walletPublicKey,
           MOCK_EVENT.id,
-          false // not used yet
+          false
         );
         
         Alert.alert(
@@ -110,7 +105,6 @@ export default function BuyTicketScreen() {
         return;
       }
 
-      // Normal mode: require signAndSendTransaction
       if (!signAndSendTransaction) {
         Alert.alert(
           'Transaction Not Available',
@@ -120,31 +114,25 @@ export default function BuyTicketScreen() {
         return;
       }
 
-      // Step 1: Create USDC transfer instruction
       const transferInstructions = await createUSDCTransferInstruction(
         walletPublicKey,
         MOCK_EVENT.organizerWallet,
         MOCK_EVENT.price
       );
 
-      // Step 2: Create ticket PDA instruction
       const ticketInstructions = await createTicketInstruction(
         walletPublicKey,
         MOCK_EVENT.id,
         walletPublicKey
       );
 
-      // Step 3: Combine all instructions
       const allInstructions = [...transferInstructions, ...ticketInstructions];
 
-      // Step 4: Sign and send transaction using LazorKit SDK
-      // This will open the portal for Face ID authentication and signing
-      // The SDK handles gasless transactions via Paymaster automatically
       const signature = await signAndSendTransactionWithPasskey(
         {
           instructions: allInstructions,
           transactionOptions: {
-            feeToken: 'USDC', // Gasless with USDC as fee token
+            feeToken: 'USDC',
             clusterSimulation: 'devnet',
           },
         },
@@ -154,14 +142,12 @@ export default function BuyTicketScreen() {
 
       console.log('Transaction signature:', signature);
 
-      // Store ticket in demo storage (in production, this would be on-chain)
       await storeTicketData(
         walletPublicKey,
         MOCK_EVENT.id,
-        false // not used yet
+        false
       );
 
-      // Success - navigate to my ticket screen
       Alert.alert(
         'Purchase Successful!',
         `Your ticket has been purchased and is ready to use.\nTransaction: ${signature.substring(0, 8)}...`,
@@ -185,10 +171,10 @@ export default function BuyTicketScreen() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#6366f1" />
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#FCFC65" />
         <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -197,146 +183,115 @@ export default function BuyTicketScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.title}>Confirm Purchase</Text>
-            <Text style={styles.subtitle}>Review ticket details below</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        <Header title="Buy Ticket" showBack={true} />
+
+        {/* Event Card */}
+        <View style={styles.eventCard}>
+          <Text style={styles.eventName}>{MOCK_EVENT.name}</Text>
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Date</Text>
+            <Text style={styles.detailValue}>{MOCK_EVENT.date}</Text>
           </View>
-          {testMode && (
-            <View style={styles.testModeBadge}>
-              <Text style={styles.testModeText}>🧪 TEST MODE</Text>
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Time</Text>
+            <Text style={styles.detailValue}>{MOCK_EVENT.time}</Text>
+          </View>
+          
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Location</Text>
+            <Text style={styles.detailValue}>{MOCK_EVENT.location}</Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.priceSection}>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Ticket Price</Text>
+              <Text style={styles.priceValue}>{MOCK_EVENT.price} USDC</Text>
             </View>
-          )}
-        </View>
-      </View>
 
-      <View style={styles.ticketDetails}>
-        <Text style={styles.eventName}>{MOCK_EVENT.name}</Text>
-        
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Date:</Text>
-          <Text style={styles.detailValue}>{MOCK_EVENT.date}</Text>
-        </View>
-        
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Time:</Text>
-          <Text style={styles.detailValue}>{MOCK_EVENT.time}</Text>
-        </View>
-        
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Location:</Text>
-          <Text style={styles.detailValue}>{MOCK_EVENT.location}</Text>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Transaction Fee</Text>
+              <Text style={styles.feeValue}>0 USDC</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalValue}>{MOCK_EVENT.price} USDC</Text>
+            </View>
+          </View>
         </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Price:</Text>
-          <Text style={styles.priceValue}>{MOCK_EVENT.price} USDC</Text>
-        </View>
-
-        <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Transaction Fee:</Text>
-          <Text style={styles.priceValue}>0 USDC (Gasless)</Text>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total:</Text>
-          <Text style={styles.totalValue}>{MOCK_EVENT.price} USDC</Text>
-        </View>
-      </View>
-
-      <View style={styles.infoBox}>
-        <Text style={styles.infoTitle}>Gasless Transaction</Text>
-        <Text style={styles.infoText}>
-          This purchase uses a gasless transaction sponsored by Paymaster.
-          You won't be charged any transaction fees.
-        </Text>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.confirmButton, processing && styles.confirmButtonDisabled]}
-        onPress={handleConfirmPurchase}
-        disabled={processing}
-      >
-        {processing ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.confirmButtonText}>
-            Confirm with Face ID
+        {/* Info Box */}
+        <View style={styles.infoBox}>
+          <Text style={styles.infoIcon}>⚡</Text>
+          <Text style={styles.infoTitle}>Gasless Transaction</Text>
+          <Text style={styles.infoText}>
+            This purchase uses a gasless transaction sponsored by Paymaster.
+            You won't be charged any transaction fees.
           </Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
+        </View>
+
+        {/* Confirm Button */}
+        <TouchableOpacity
+          style={[styles.confirmButton, processing && styles.confirmButtonDisabled]}
+          onPress={handleConfirmPurchase}
+          disabled={processing}
+        >
+          {processing ? (
+            <ActivityIndicator color="#000000" />
+          ) : (
+            <>
+              <Text style={styles.buttonIcon}>🔐</Text>
+              <Text style={styles.confirmButtonText}>
+                Confirm with Face ID
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+
+      <Footer />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#000000',
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     padding: 20,
+    paddingBottom: 100,
   },
-  header: {
-    marginBottom: 24,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    flexWrap: 'wrap',
-  },
-  headerTextContainer: {
-    flex: 1,
-    minWidth: 200,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  testModeBadge: {
-    backgroundColor: '#fef3c7',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginLeft: 12,
-    borderWidth: 2,
-    borderColor: '#f59e0b',
-    borderStyle: 'dashed',
-  },
-  testModeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#92400e',
-  },
-  ticketDetails: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
+  eventCard: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 24,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#333333',
+    shadowColor: '#FCFC65',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 5,
   },
   eventName: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 20,
+    color: '#FFFFFF',
+    marginBottom: 24,
   },
   detailRow: {
     flexDirection: 'row',
@@ -345,19 +300,21 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#999999',
     fontWeight: '500',
   },
   detailValue: {
     fontSize: 14,
-    color: '#1a1a1a',
-    flex: 1,
-    textAlign: 'right',
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   divider: {
     height: 1,
-    backgroundColor: '#e5e5e5',
-    marginVertical: 16,
+    backgroundColor: '#333333',
+    marginVertical: 20,
+  },
+  priceSection: {
+    marginTop: 8,
   },
   priceRow: {
     flexDirection: 'row',
@@ -366,12 +323,17 @@ const styles = StyleSheet.create({
   },
   priceLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#999999',
   },
   priceValue: {
     fontSize: 14,
-    color: '#1a1a1a',
-    fontWeight: '500',
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  feeValue: {
+    fontSize: 14,
+    color: '#FCFC65',
+    fontWeight: '600',
   },
   totalRow: {
     flexDirection: 'row',
@@ -379,55 +341,69 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   totalLabel: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#FFFFFF',
   },
   totalValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#6366f1',
+    color: '#FCFC65',
   },
   infoBox: {
-    backgroundColor: '#e0e7ff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 20,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FCFC65',
+  },
+  infoIcon: {
+    fontSize: 32,
+    marginBottom: 12,
   },
   infoTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3730a3',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FCFC65',
     marginBottom: 8,
   },
   infoText: {
     fontSize: 13,
-    color: '#4338ca',
+    color: '#CCCCCC',
+    textAlign: 'center',
     lineHeight: 18,
   },
   confirmButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: '#FCFC65',
+    paddingVertical: 18,
+    borderRadius: 16,
     alignItems: 'center',
-    shadowColor: '#6366f1',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    shadowColor: '#FCFC65',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
   confirmButtonDisabled: {
-    backgroundColor: '#999',
+    backgroundColor: '#CCCCCC',
     shadowOpacity: 0,
   },
+  buttonIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
   confirmButtonText: {
-    color: '#fff',
+    color: '#000000',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   loadingText: {
     marginTop: 16,
-    color: '#666',
+    color: '#FFFFFF',
     fontSize: 14,
   },
 });

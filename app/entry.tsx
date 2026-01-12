@@ -1,6 +1,6 @@
 /**
  * Entry Verification Screen
- * Verifies entry with Face ID and marks ticket as used on-chain
+ * Modern UI with white, black, and #FCFC65 color scheme
  */
 
 import { useState, useEffect } from 'react';
@@ -12,18 +12,20 @@ import {
   ActivityIndicator,
   ScrollView,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
-import { getWalletAddress, signWithPasskey, signAndSendTransactionWithPasskey, LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
+import { signWithPasskey, signAndSendTransactionWithPasskey, LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
 import {
   getTicketData,
   markTicketUsedInstruction,
-  getTicketPDA,
   updateTicketUsed,
 } from '@/lib/solana';
 import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 // Mock event data
 const MOCK_EVENT = {
@@ -48,11 +50,9 @@ export default function EntryScreen() {
 
   async function checkTestMode() {
     try {
-      // Check if test mode is enabled for local testing
       const testModeEnabled = await AsyncStorage.getItem('test_mode');
       
       if (testModeEnabled === 'enabled') {
-        // In test mode, use mock wallet address
         const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
         setWalletPublicKey(mockWalletAddress);
         setTestMode(true);
@@ -60,14 +60,11 @@ export default function EntryScreen() {
         return;
       }
 
-      // Normal mode: require wallet connection
       if (!isConnected) {
         router.replace('/login');
         return;
       }
 
-      // For normal mode, use mock wallet for now
-      // In production, get actual wallet from SDK
       const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
       setWalletPublicKey(mockWalletAddress);
       setTestMode(false);
@@ -80,7 +77,6 @@ export default function EntryScreen() {
 
   async function loadTicketTestMode(publicKey: PublicKey) {
     try {
-      // Get ticket data from on-chain
       const data = await getTicketData(publicKey, MOCK_EVENT.id);
       if (!data) {
         Alert.alert('No Ticket', 'You do not have a ticket for this event.');
@@ -110,12 +106,9 @@ export default function EntryScreen() {
     setVerified(false);
 
     try {
-      // In test mode, simulate entry verification
       if (testMode) {
-        // Simulate verification process
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Verify ticket ownership on-chain (mock check)
         const onChainTicket = await getTicketData(walletPublicKey, MOCK_EVENT.id);
 
         if (!onChainTicket) {
@@ -126,7 +119,6 @@ export default function EntryScreen() {
           throw new Error('Ticket has already been used');
         }
 
-        // In test mode, mark ticket as used in demo storage
         await updateTicketUsed(walletPublicKey, MOCK_EVENT.id, true);
         
         setVerified(true);
@@ -149,7 +141,6 @@ export default function EntryScreen() {
         return;
       }
 
-      // Normal mode: require signMessage and signAndSendTransaction
       if (!signMessage || !signAndSendTransaction) {
         Alert.alert(
           'Authentication Required',
@@ -159,19 +150,14 @@ export default function EntryScreen() {
         return;
       }
 
-      // Step 1: Generate challenge (in production, this comes from server)
       const challenge = `entry_verification_${MOCK_EVENT.id}_${Date.now()}`;
 
-      // Step 2: Sign challenge with passkey using LazorKit SDK
-      // This will open the portal for Face ID authentication
       const signResult = await signWithPasskey(
         challenge,
         signMessage,
         `${LAZORKIT_REDIRECT_URL}?screen=entry&verify=true`
       );
 
-      // Step 3: Verify ticket ownership on-chain
-      const ticketPDA = getTicketPDA(walletPublicKey, MOCK_EVENT.id);
       const onChainTicket = await getTicketData(walletPublicKey, MOCK_EVENT.id);
 
       if (!onChainTicket) {
@@ -182,26 +168,21 @@ export default function EntryScreen() {
         throw new Error('Ticket has already been used');
       }
 
-      // Verify ticket owner matches wallet
       if (!onChainTicket.ownerWallet.equals(walletPublicKey)) {
         throw new Error('Ticket ownership verification failed');
       }
 
-      // Step 4: Create instruction to mark ticket as used
       const markUsedInstructions = await markTicketUsedInstruction(
         walletPublicKey,
         MOCK_EVENT.id,
         walletPublicKey
       );
 
-      // Step 5: Sign and send transaction using LazorKit SDK
-      // This will open the portal again for Face ID to sign the transaction
-      // The SDK handles gasless transactions via Paymaster automatically
       const signature = await signAndSendTransactionWithPasskey(
         {
           instructions: markUsedInstructions,
           transactionOptions: {
-            feeToken: 'USDC', // Gasless with USDC
+            feeToken: 'USDC',
             clusterSimulation: 'devnet',
           },
         },
@@ -211,13 +192,10 @@ export default function EntryScreen() {
 
       console.log('Entry transaction signature:', signature);
 
-      // Update ticket as used in demo storage
       await updateTicketUsed(walletPublicKey, MOCK_EVENT.id, true);
 
-      // Success - mark ticket as used
       setVerified(true);
       
-      // Update local ticket data
       setTicketData({
         ...ticketData,
         used: true,
@@ -250,16 +228,12 @@ export default function EntryScreen() {
     setVerified(false);
   }
 
-  function handleBack() {
-    router.back();
-  }
-
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#6366f1" />
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#FCFC65" />
         <Text style={styles.loadingText}>Loading verification...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -268,317 +242,287 @@ export default function EntryScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.title}>Entry Verification</Text>
-            <Text style={styles.subtitle}>{MOCK_EVENT.name}</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        <Header title="Entry Verification" showBack={true} />
+
+        {/* Event Name */}
+        <Text style={styles.eventName}>{MOCK_EVENT.name}</Text>
+
+        {/* Status Card */}
+        <View style={styles.statusCard}>
+          <View style={styles.statusBadge}>
+            <Text style={styles.statusText}>✓ Valid Ticket</Text>
           </View>
-          {testMode && (
-            <View style={styles.testModeBadge}>
-              <Text style={styles.testModeText}>🧪 TEST MODE</Text>
-            </View>
-          )}
         </View>
-      </View>
 
-      <View style={styles.ticketCard}>
-        <Text style={styles.ticketLabel}>Ticket Status</Text>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>Valid</Text>
+        {/* Success State */}
+        {verified && (
+          <View style={styles.successCard}>
+            <Text style={styles.successIcon}>✓</Text>
+            <Text style={styles.successTitle}>Entry Granted</Text>
+            <Text style={styles.successText}>
+              Your ticket has been verified successfully. You may now enter the event.
+            </Text>
+            <Text style={styles.successNote}>
+              Your ticket has been marked as used on-chain and cannot be reused.
+            </Text>
+          </View>
+        )}
+
+        {/* Error State */}
+        {denied && !verifying && (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorIcon}>✗</Text>
+            <Text style={styles.errorTitle}>Entry Denied</Text>
+            <Text style={styles.errorText}>
+              Entry verification failed. Please try again or contact support.
+            </Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={handleRetry}
+            >
+              <Text style={styles.retryButtonText}>Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Verification Section */}
+        {!verified && !denied && (
+          <View style={styles.verificationSection}>
+            <Text style={styles.verificationIcon}>🔐</Text>
+            <Text style={styles.verificationTitle}>Verify Your Identity</Text>
+            <Text style={styles.verificationText}>
+              Use Face ID to verify your identity and prove ticket ownership.
+              This will mark your ticket as used on-chain.
+            </Text>
+
+            <TouchableOpacity
+              style={[
+                styles.verifyButton,
+                verifying && styles.verifyButtonDisabled,
+              ]}
+              onPress={handleVerifyEntry}
+              disabled={verifying}
+            >
+              {verifying ? (
+                <ActivityIndicator color="#000000" />
+              ) : (
+                <>
+                  <Text style={styles.buttonIcon}>🔐</Text>
+                  <Text style={styles.verifyButtonText}>
+                    Verify Entry with Face ID
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Info Section */}
+        <View style={styles.infoSection}>
+          <Text style={styles.infoTitle}>How Entry Verification Works</Text>
+          <View style={styles.infoList}>
+            <Text style={styles.infoItem}>1. Face ID authenticates your identity</Text>
+            <Text style={styles.infoItem}>2. Your passkey signs a verification challenge</Text>
+            <Text style={styles.infoItem}>3. Ticket ownership is verified on-chain</Text>
+            <Text style={styles.infoItem}>4. Ticket is marked as used (non-reusable)</Text>
+            <Text style={styles.infoItem}>5. All transactions are gasless via Paymaster</Text>
+          </View>
         </View>
-      </View>
+      </ScrollView>
 
-      {verified && (
-        <View style={styles.successCard}>
-          <Text style={styles.successTitle}>✓ Entry Granted</Text>
-          <Text style={styles.successText}>
-            Your ticket has been verified successfully. You may now enter the event.
-          </Text>
-          <Text style={styles.successNote}>
-            Your ticket has been marked as used on-chain and cannot be reused.
-          </Text>
-        </View>
-      )}
-
-      {denied && !verifying && (
-        <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>✗ Entry Denied</Text>
-          <Text style={styles.errorText}>
-            Entry verification failed. Please try again or contact support.
-          </Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={handleRetry}
-          >
-            <Text style={styles.retryButtonText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {!verified && !denied && (
-        <View style={styles.verificationSection}>
-          <Text style={styles.verificationTitle}>Verify Your Identity</Text>
-          <Text style={styles.verificationText}>
-            Use Face ID to verify your identity and prove ticket ownership.
-            This will mark your ticket as used on-chain.
-          </Text>
-
-          <TouchableOpacity
-            style={[
-              styles.verifyButton,
-              verifying && styles.verifyButtonDisabled,
-            ]}
-            onPress={handleVerifyEntry}
-            disabled={verifying}
-          >
-            {verifying ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.verifyButtonText}>
-                Verify Entry with Face ID
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <View style={styles.infoSection}>
-        <Text style={styles.infoTitle}>How Entry Verification Works</Text>
-        <Text style={styles.infoText}>
-          1. Face ID authenticates your identity{'\n'}
-          2. Your passkey signs a verification challenge{'\n'}
-          3. Ticket ownership is verified on-chain{'\n'}
-          4. Ticket is marked as used (non-reusable){'\n'}
-          5. All transactions are gasless via Paymaster
-        </Text>
-      </View>
-
-      {verified && (
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={handleBack}
-        >
-          <Text style={styles.backButtonText}>Back to My Ticket</Text>
-        </TouchableOpacity>
-      )}
-    </ScrollView>
+      <Footer />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#000000',
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     padding: 20,
+    paddingBottom: 100,
   },
-  header: {
-    marginBottom: 24,
-    alignItems: 'flex-start',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    width: '100%',
-    flexWrap: 'wrap',
-  },
-  headerTextContainer: {
-    flex: 1,
-    alignItems: 'flex-start',
-    minWidth: 200,
-  },
-  title: {
-    fontSize: 28,
+  eventName: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  testModeBadge: {
-    backgroundColor: '#fef3c7',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginLeft: 12,
-    borderWidth: 2,
-    borderColor: '#f59e0b',
-    borderStyle: 'dashed',
-  },
-  testModeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#92400e',
-  },
-  ticketCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
+    color: '#FFFFFF',
     marginBottom: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  ticketLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 12,
+  statusCard: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333333',
   },
   statusBadge: {
-    backgroundColor: '#d1fae5',
-    paddingVertical: 8,
+    backgroundColor: '#FCFC65',
+    paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 20,
   },
   statusText: {
-    color: '#065f46',
-    fontWeight: '600',
+    color: '#000000',
+    fontWeight: '700',
     fontSize: 16,
   },
   successCard: {
-    backgroundColor: '#d1fae5',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 24,
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FCFC65',
+  },
+  successIcon: {
+    fontSize: 48,
+    marginBottom: 16,
   },
   successTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#065f46',
+    color: '#FCFC65',
     marginBottom: 12,
   },
   successText: {
     fontSize: 14,
-    color: '#047857',
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 12,
     lineHeight: 20,
   },
   successNote: {
     fontSize: 12,
-    color: '#059669',
+    color: '#CCCCCC',
     textAlign: 'center',
-    fontStyle: 'italic',
   },
   errorCard: {
-    backgroundColor: '#fee2e2',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 24,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#CC0000',
+  },
+  errorIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+    color: '#CC0000',
   },
   errorTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#991b1b',
+    color: '#CC0000',
     marginBottom: 12,
   },
   errorText: {
     fontSize: 14,
-    color: '#b91c1c',
+    color: '#CC0000',
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 20,
   },
   retryButton: {
-    backgroundColor: '#dc2626',
+    backgroundColor: '#CC0000',
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 12,
   },
   retryButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
   verificationSection: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333333',
+  },
+  verificationIcon: {
+    fontSize: 48,
+    marginBottom: 16,
   },
   verificationTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginBottom: 12,
     textAlign: 'center',
   },
   verificationText: {
     fontSize: 14,
-    color: '#666',
+    color: '#CCCCCC',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
   },
   verifyButton: {
-    backgroundColor: '#10b981',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: '#FCFC65',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 16,
     alignItems: 'center',
-    shadowColor: '#10b981',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    shadowColor: '#FCFC65',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
   verifyButtonDisabled: {
-    backgroundColor: '#999',
+    backgroundColor: '#CCCCCC',
     shadowOpacity: 0,
   },
+  buttonIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
   verifyButtonText: {
-    color: '#fff',
+    color: '#000000',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   infoSection: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
     padding: 20,
-    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#333333',
   },
   infoTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginBottom: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 16,
   },
-  infoText: {
+  infoList: {
+    gap: 12,
+  },
+  infoItem: {
     fontSize: 14,
-    color: '#666',
-    lineHeight: 22,
-  },
-  backButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#CCCCCC',
+    lineHeight: 20,
   },
   loadingText: {
     marginTop: 16,
-    color: '#666',
+    color: '#FFFFFF',
     fontSize: 14,
   },
 });
-

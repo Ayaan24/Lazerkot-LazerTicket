@@ -1,6 +1,6 @@
 /**
  * Login Screen
- * Sign in with Face ID - Creates or restores smart wallet via LazorKit SDK
+ * Black background with white text and yellow accents
  */
 
 import { useState, useEffect } from 'react';
@@ -11,10 +11,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
-import { convertWalletInfo, LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
+import { LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
 import * as LocalAuthentication from 'expo-local-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -28,7 +29,6 @@ export default function LoginScreen() {
   useEffect(() => {
     checkBiometric();
     
-    // If already connected, navigate to events
     if (isConnected) {
       router.replace('/events');
     }
@@ -59,14 +59,11 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      // Connect to wallet using LazorKit SDK
-      // This will open the portal for passkey creation/login
       await connect({
         redirectUrl: `${LAZORKIT_REDIRECT_URL}?screen=events`,
         onSuccess: (walletInfo) => {
           console.log('Connected successfully:', walletInfo.smartWallet);
           setLoading(false);
-          // Navigate to events screen on success
           router.replace('/events');
         },
         onFail: (error) => {
@@ -78,9 +75,6 @@ export default function LoginScreen() {
           );
         },
       });
-
-      // Note: The onSuccess callback will handle navigation
-      // If connection is immediate, we'll navigate in useEffect
     } catch (error: any) {
       console.error('Login error:', error);
       setLoading(false);
@@ -93,38 +87,45 @@ export default function LoginScreen() {
 
   if (checking) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#6366f1" />
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#FCFC65" />
         <Text style={styles.loadingText}>Checking biometric availability...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>LazorKit Ticket Demo</Text>
-        <Text style={styles.subtitle}>
-          Sign in with Face ID to get started
-        </Text>
-
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
-            • No wallet address to manage{'\n'}
-            • No seed phrases to remember{'\n'}
-            • Secure biometric authentication{'\n'}
-            • Gasless transactions
-          </Text>
+        {/* Logo/Icon */}
+        <View style={styles.logoContainer}>
+          <View style={styles.logoCircle}>
+            <Text style={styles.logoText}>🎫</Text>
+          </View>
+          <View style={styles.logoGlow} />
         </View>
 
-        {!biometricAvailable && (
-          <View style={styles.warningBox}>
-            <Text style={styles.warningText}>
-              Biometric authentication is not available on this device.
-              Please enable Face ID / Touch ID in settings.
-            </Text>
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subtitle}>
+          Sign in with Face ID to access your tickets{'\n'}
+          No wallet, no seed phrases, just your face
+        </Text>
+
+        {/* Features List */}
+        <View style={styles.featuresContainer}>
+          <View style={styles.featureItem}>
+            <Text style={styles.featureIcon}>🔐</Text>
+            <Text style={styles.featureText}>Secure biometric authentication</Text>
           </View>
-        )}
+          <View style={styles.featureItem}>
+            <Text style={styles.featureIcon}>⚡</Text>
+            <Text style={styles.featureText}>Gasless transactions</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Text style={styles.featureIcon}>🎯</Text>
+            <Text style={styles.featureText}>Smart wallet auto-created</Text>
+          </View>
+        </View>
 
         <TouchableOpacity
           style={[
@@ -135,26 +136,28 @@ export default function LoginScreen() {
           disabled={!biometricAvailable || loading || isConnected}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#000000" />
           ) : (
-            <Text style={styles.buttonText}>Sign in with Face ID</Text>
+            <>
+              <Text style={styles.buttonIcon}>🔐</Text>
+              <Text style={styles.buttonText}>Sign in with Face ID</Text>
+            </>
           )}
         </TouchableOpacity>
 
-        {isConnected && (
-          <View style={styles.connectedBox}>
-            <Text style={styles.connectedText}>
-              Connected ✓
+        {!biometricAvailable && (
+          <View style={styles.warningBox}>
+            <Text style={styles.warningIcon}>⚠️</Text>
+            <Text style={styles.warningText}>
+              Biometric authentication is not available. Please enable Face ID / Touch ID in settings.
             </Text>
           </View>
         )}
 
-        {/* Testing/Demo Mode Button - For Local Development Only */}
+        {/* Test Mode Button */}
         <TouchableOpacity
           style={styles.testButton}
           onPress={async () => {
-            // Enable test mode for local testing
-            // This bypasses authentication for quick testing
             try {
               await AsyncStorage.setItem('test_mode', 'enabled');
               router.replace('/events');
@@ -164,23 +167,18 @@ export default function LoginScreen() {
             }
           }}
         >
-          <Text style={styles.testButtonText}>🚀 Test Mode: Go to Dashboard</Text>
+          <Text style={styles.testButtonText}>🚀 Test Mode</Text>
+          <Text style={styles.testButtonSubtext}>Skip authentication for testing</Text>
         </TouchableOpacity>
-
-        <View style={styles.testInfoBox}>
-          <Text style={styles.testInfoText}>
-            ⚠️ Test mode skips authentication for local development
-          </Text>
-        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -190,117 +188,149 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignItems: 'center',
   },
+  logoContainer: {
+    marginBottom: 40,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  logoCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#FCFC65',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#FCFC65',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  logoGlow: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: '#FCFC65',
+    opacity: 0.2,
+    top: -10,
+  },
+  logoText: {
+    fontSize: 60,
+  },
   title: {
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: 'bold',
-    color: '#1a1a1a',
-    marginBottom: 10,
+    color: '#FFFFFF',
+    marginBottom: 16,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#CCCCCC',
     marginBottom: 40,
     textAlign: 'center',
-  },
-  infoBox: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 30,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#333',
     lineHeight: 24,
   },
-  warningBox: {
-    backgroundColor: '#fff3cd',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
+  featuresContainer: {
     width: '100%',
+    marginBottom: 40,
+    gap: 16,
   },
-  warningText: {
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1A1A1A',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333333',
+  },
+  featureIcon: {
+    fontSize: 24,
+    marginRight: 16,
+  },
+  featureText: {
     fontSize: 14,
-    color: '#856404',
-    textAlign: 'center',
+    color: '#FFFFFF',
+    flex: 1,
+    fontWeight: '500',
   },
   button: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 16,
+    backgroundColor: '#FCFC65',
+    paddingVertical: 20,
     paddingHorizontal: 32,
-    borderRadius: 12,
+    borderRadius: 16,
     width: '100%',
     alignItems: 'center',
-    shadowColor: '#6366f1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    shadowColor: '#FCFC65',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#333333',
     shadowOpacity: 0,
   },
+  buttonIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
   buttonText: {
-    color: '#fff',
+    color: '#000000',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  connectedBox: {
-    marginTop: 20,
-    padding: 12,
-    backgroundColor: '#d1fae5',
-    borderRadius: 8,
+  warningBox: {
+    backgroundColor: '#1A1A1A',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 24,
     width: '100%',
+    borderWidth: 1,
+    borderColor: '#333333',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  connectedText: {
+  warningIcon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  warningText: {
+    fontSize: 13,
+    color: '#CCCCCC',
+    flex: 1,
+    lineHeight: 18,
+  },
+  testButton: {
+    marginTop: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#FCFC65',
+    borderStyle: 'dashed',
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: '#1A1A1A',
+  },
+  testButtonText: {
+    color: '#FCFC65',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  testButtonSubtext: {
+    color: '#999999',
     fontSize: 12,
-    color: '#065f46',
-    textAlign: 'center',
   },
   loadingText: {
     marginTop: 16,
-    color: '#666',
+    color: '#FFFFFF',
     fontSize: 14,
-  },
-  testButton: {
-    backgroundColor: '#10b981',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    marginTop: 30,
-    width: '100%',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#059669',
-    borderStyle: 'dashed',
-  },
-  testButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  testInfoBox: {
-    marginTop: 12,
-    padding: 10,
-    backgroundColor: '#fef3c7',
-    borderRadius: 6,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#f59e0b',
-  },
-  testInfoText: {
-    fontSize: 11,
-    color: '#92400e',
-    textAlign: 'center',
-    fontStyle: 'italic',
   },
 });

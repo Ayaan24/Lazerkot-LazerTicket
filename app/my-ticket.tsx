@@ -1,6 +1,6 @@
 /**
  * My Ticket Screen
- * Displays ticket details and allows entry verification
+ * Black background with white text and yellow accents
  */
 
 import { useState, useEffect } from 'react';
@@ -11,13 +11,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
-import { getWalletAddress } from '@/lib/lazorkit';
 import { getTicketData } from '@/lib/solana';
 import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 // Mock event data
 const MOCK_EVENT = {
@@ -43,11 +45,9 @@ export default function MyTicketScreen() {
 
   async function checkTestMode() {
     try {
-      // Check if test mode is enabled for local testing
       const testModeEnabled = await AsyncStorage.getItem('test_mode');
       
       if (testModeEnabled === 'enabled') {
-        // In test mode, use mock wallet address
         const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
         setWalletPublicKey(mockWalletAddress);
         setTestMode(true);
@@ -55,15 +55,11 @@ export default function MyTicketScreen() {
         return;
       }
 
-      // Normal mode: require wallet connection
       if (!isConnected) {
         router.replace('/login');
         return;
       }
 
-      // For normal mode, try to get wallet from SDK state
-      // Since wallet property isn't available, use mock for now
-      // In production, this would get actual wallet from SDK
       const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
       setWalletPublicKey(mockWalletAddress);
       setTestMode(false);
@@ -76,14 +72,11 @@ export default function MyTicketScreen() {
 
   async function loadTicketTestMode(publicKey: PublicKey) {
     try {
-      // Get ticket data from on-chain
       const data = await getTicketData(publicKey, MOCK_EVENT.id);
       if (!data) {
-        // Ticket doesn't exist, redirect to events
         router.replace('/events');
         return;
       }
-
       setTicketData(data);
     } catch (error) {
       console.error('Error loading ticket:', error);
@@ -98,10 +91,10 @@ export default function MyTicketScreen() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#6366f1" />
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#FCFC65" />
         <Text style={styles.loadingText}>Loading ticket...</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
@@ -112,268 +105,437 @@ export default function MyTicketScreen() {
   const isUsed = ticketData.used;
   const isValid = !isUsed;
 
+  // Generate a booking reference
+  const bookingRef = `TKT-2024-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <Text style={styles.title}>My Ticket</Text>
-          {testMode && (
-            <View style={styles.testModeBadge}>
-              <Text style={styles.testModeText}>🧪 TEST MODE</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        <Header title="My Ticket" showBack={true} />
+
+        {/* Date and Route */}
+        <View style={styles.dateRouteSection}>
+          <Text style={styles.dateTime}>{MOCK_EVENT.date}, {MOCK_EVENT.time}</Text>
+          <Text style={styles.route}>{MOCK_EVENT.location}</Text>
+        </View>
+
+        {/* Ticket Card */}
+        <View style={styles.ticketContainer}>
+          {/* Perforated left edge */}
+          <View style={styles.perforatedLeft}>
+            {[...Array(8)].map((_, i) => (
+              <View key={i} style={styles.perforation} />
+            ))}
+          </View>
+
+          {/* Ticket Content */}
+          <View style={styles.ticketCard}>
+            {/* Passenger Section */}
+            <View style={styles.passengerSection}>
+              <Text style={styles.passengerLabel}>Passenger</Text>
+              <Text style={styles.passengerName}>You</Text>
             </View>
-          )}
-        </View>
-      </View>
 
-      <View style={styles.ticketCard}>
-        <View style={styles.ticketHeader}>
-          <Text style={styles.eventName}>{MOCK_EVENT.name}</Text>
-          <View style={[styles.statusBadge, isUsed && styles.statusBadgeUsed]}>
-            <Text style={[styles.statusText, isUsed && styles.statusTextUsed]}>
-              {isValid ? 'Valid' : 'Used'}
-            </Text>
+            {/* Journey Timeline */}
+            <View style={styles.journeySection}>
+              <View style={styles.timelineContainer}>
+                <View style={styles.timelineLeft}>
+                  <Text style={styles.timeText}>{MOCK_EVENT.time}</Text>
+                  <View style={styles.timelineDot} />
+                  <Text style={styles.locationText}>{MOCK_EVENT.location.split(',')[0]}</Text>
+                  <Text style={styles.stationText}>{MOCK_EVENT.location}</Text>
+                </View>
+
+                <View style={styles.timelineCenter}>
+                  <Text style={styles.durationText}>Event</Text>
+                  <View style={styles.eventIcon}>
+                    <Text style={styles.eventIconText}>🎵</Text>
+                  </View>
+                </View>
+
+                <View style={styles.timelineRight}>
+                  <Text style={styles.timeText}>11:00 PM</Text>
+                  <View style={styles.timelineDotEnd} />
+                  <Text style={styles.locationText}>End</Text>
+                  <Text style={styles.stationText}>Event Concludes</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Booking Reference */}
+            <View style={styles.bookingSection}>
+              <Text style={styles.bookingLabel}>Booking Reference</Text>
+              <Text style={styles.bookingRef}>{bookingRef}</Text>
+            </View>
+
+            {/* Ticket Details */}
+            <View style={styles.detailsSection}>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Event</Text>
+                <Text style={styles.detailValue}>Music Festival</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Type</Text>
+                <Text style={styles.detailValue}>General</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Text style={styles.detailLabel}>Price</Text>
+                <Text style={styles.detailValue}>{MOCK_EVENT.price} USDC</Text>
+              </View>
+            </View>
+
+            {/* Status Badge */}
+            <View style={styles.statusSection}>
+              <View style={[styles.statusBadge, isUsed && styles.statusBadgeUsed]}>
+                <Text style={[styles.statusText, isUsed && styles.statusTextUsed]}>
+                  {isValid ? 'Valid' : 'Used'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Barcode Section */}
+            <View style={styles.barcodeSection}>
+              <View style={styles.barcodeContainer}>
+                {/* Simulated barcode */}
+                {[...Array(20)].map((_, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.barcodeLine,
+                      { width: Math.random() * 3 + 2, marginRight: 2 },
+                    ]}
+                  />
+                ))}
+              </View>
+              <Text style={styles.barcodeText}>{bookingRef}</Text>
+            </View>
+          </View>
+
+          {/* Perforated right edge */}
+          <View style={styles.perforatedRight}>
+            {[...Array(8)].map((_, i) => (
+              <View key={i} style={styles.perforation} />
+            ))}
           </View>
         </View>
 
-        <View style={styles.ticketDetails}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Date:</Text>
-            <Text style={styles.detailValue}>{MOCK_EVENT.date}</Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Time:</Text>
-            <Text style={styles.detailValue}>{MOCK_EVENT.time}</Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Location:</Text>
-            <Text style={styles.detailValue}>{MOCK_EVENT.location}</Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Ticket Type:</Text>
-            <Text style={styles.detailValue}>General Admission</Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Price Paid:</Text>
-            <Text style={styles.detailValue}>{MOCK_EVENT.price} USDC</Text>
-          </View>
-        </View>
-
-        {isUsed && (
-          <View style={styles.usedWarning}>
-            <Text style={styles.usedWarningText}>
-              This ticket has already been used for entry.
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {isValid && (
-        <View style={styles.actionSection}>
-          <Text style={styles.actionDescription}>
-            Use Face ID to verify your identity and enter the event.
-            Your ticket will be marked as used after entry.
-          </Text>
-
+        {/* Action Button */}
+        {isValid && (
           <TouchableOpacity
             style={styles.enterButton}
             onPress={handleEnterEvent}
           >
             <Text style={styles.enterButtonText}>Enter Event</Text>
           </TouchableOpacity>
-        </View>
-      )}
+        )}
 
-      {isUsed && (
-        <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>Ticket Already Used</Text>
-          <Text style={styles.infoText}>
-            This ticket was used for entry verification. Each ticket can only be used once.
-          </Text>
-        </View>
-      )}
+        {isUsed && (
+          <View style={styles.usedInfo}>
+            <Text style={styles.usedInfoText}>
+              This ticket has already been used for entry.
+            </Text>
+          </View>
+        )}
+      </ScrollView>
 
-      <View style={styles.infoSection}>
-        <Text style={styles.infoTitle}>About Your Ticket</Text>
-        <Text style={styles.infoText}>
-          Your ticket is stored on-chain as a Program Derived Address (PDA).
-          It cannot be transferred and can only be used once for entry verification.
-          No wallet address is exposed - your identity is verified via Face ID.
-        </Text>
-      </View>
-    </ScrollView>
+      <Footer />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#000000',
+  },
+  scrollView: {
+    flex: 1,
   },
   content: {
     padding: 20,
+    paddingBottom: 100,
   },
-  header: {
+  dateRouteSection: {
     marginBottom: 24,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
+  dateTime: {
+    fontSize: 14,
+    color: '#999999',
+    marginBottom: 8,
   },
-  title: {
-    fontSize: 28,
+  route: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#1a1a1a',
-    flex: 1,
+    color: '#FFFFFF',
   },
-  testModeBadge: {
-    backgroundColor: '#fef3c7',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginLeft: 12,
-    borderWidth: 2,
-    borderColor: '#f59e0b',
-    borderStyle: 'dashed',
+  ticketContainer: {
+    flexDirection: 'row',
+    marginBottom: 24,
   },
-  testModeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#92400e',
+  perforatedLeft: {
+    width: 8,
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  perforatedRight: {
+    width: 8,
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  perforation: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#000000',
+    borderWidth: 1,
+    borderColor: '#333333',
   },
   ticketCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    flex: 1,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#333333',
+    shadowColor: '#FCFC65',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 5,
   },
-  ticketHeader: {
+  passengerSection: {
+    marginBottom: 24,
+  },
+  passengerLabel: {
+    fontSize: 12,
+    color: '#999999',
+    marginBottom: 8,
+  },
+  passengerName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  journeySection: {
+    marginBottom: 24,
+  },
+  timelineContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 20,
   },
-  eventName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+  timelineLeft: {
     flex: 1,
-    marginRight: 12,
+    alignItems: 'flex-start',
   },
-  statusBadge: {
-    backgroundColor: '#d1fae5',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+  timelineCenter: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
   },
-  statusBadgeUsed: {
-    backgroundColor: '#fee2e2',
+  timelineRight: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
-  statusText: {
-    color: '#065f46',
+  timeText: {
+    fontSize: 14,
     fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FCFC65',
+    marginBottom: 8,
+  },
+  timelineDotEnd: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 2,
+    borderColor: '#FCFC65',
+    marginBottom: 8,
+  },
+  locationText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  stationText: {
     fontSize: 12,
+    color: '#999999',
   },
-  statusTextUsed: {
-    color: '#991b1b',
+  durationText: {
+    fontSize: 12,
+    color: '#999999',
+    marginBottom: 8,
   },
-  ticketDetails: {
-    marginBottom: 16,
+  eventIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FCFC65',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  detailRow: {
+  eventIconText: {
+    fontSize: 20,
+  },
+  bookingSection: {
+    marginBottom: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+  },
+  bookingLabel: {
+    fontSize: 12,
+    color: '#999999',
+    marginBottom: 8,
+  },
+  bookingRef: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  detailsSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+  },
+  detailItem: {
+    alignItems: 'center',
   },
   detailLabel: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: 12,
+    color: '#999999',
+    marginBottom: 4,
   },
   detailValue: {
     fontSize: 14,
-    color: '#1a1a1a',
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#e5e5e5',
-    marginVertical: 16,
+  statusSection: {
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  usedWarning: {
-    backgroundColor: '#fee2e2',
-    padding: 12,
+  statusBadge: {
+    backgroundColor: '#FCFC65',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+  },
+  statusBadgeUsed: {
+    backgroundColor: '#333333',
+    borderWidth: 1,
+    borderColor: '#666666',
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#000000',
+  },
+  statusTextUsed: {
+    color: '#999999',
+  },
+  barcodeSection: {
+    alignItems: 'center',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+  },
+  barcodeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    backgroundColor: '#000000',
     borderRadius: 8,
-    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#333333',
   },
-  usedWarningText: {
-    color: '#991b1b',
-    fontSize: 14,
-    textAlign: 'center',
+  barcodeLine: {
+    height: 40,
+    backgroundColor: '#FFFFFF',
   },
-  actionSection: {
-    marginBottom: 20,
-  },
-  actionDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
-    lineHeight: 20,
+  barcodeText: {
+    fontSize: 12,
+    color: '#999999',
+    letterSpacing: 2,
   },
   enterButton: {
-    backgroundColor: '#10b981',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: '#FCFC65',
+    paddingVertical: 18,
+    borderRadius: 16,
     alignItems: 'center',
-    shadowColor: '#10b981',
+    marginTop: 20,
+    shadowColor: '#FCFC65',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 6,
   },
   enterButtonText: {
-    color: '#fff',
+    color: '#000000',
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  infoBox: {
-    backgroundColor: '#fee2e2',
-    borderRadius: 8,
+  usedInfo: {
+    backgroundColor: '#1A1A1A',
     padding: 16,
-    marginBottom: 20,
-  },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#991b1b',
-    marginBottom: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#7f1d1d',
-    lineHeight: 20,
-  },
-  infoSection: {
-    backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 20,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#333333',
+  },
+  usedInfoText: {
+    fontSize: 14,
+    color: '#CCCCCC',
+    textAlign: 'center',
   },
   loadingText: {
     marginTop: 16,
-    color: '#666',
+    color: '#FFFFFF',
     fontSize: 14,
   },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: 'rgba(30, 30, 60, 0.95)',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  footerButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 44,
+    height: 44,
+  },
+  footerIconActive: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
-
