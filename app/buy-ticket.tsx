@@ -13,6 +13,7 @@ import {
   ScrollView,
   Alert,
   SafeAreaView,
+  ImageBackground,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
@@ -190,44 +191,108 @@ export default function BuyTicketScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <Header title="Buy Ticket" showBack={true} />
 
-        {/* Event Card */}
-        <View style={styles.eventCard}>
-          <Text style={styles.eventName}>{event.name}</Text>
-          
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Date</Text>
-            <Text style={styles.detailValue}>{event.date}</Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Time</Text>
-            <Text style={styles.detailValue}>{event.time}</Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Location</Text>
-            <Text style={styles.detailValue}>{event.location}</Text>
+        {/* Ticket Preview */}
+        <View style={styles.ticketContainer}>
+          {/* Perforated left edge */}
+          <View style={styles.perforatedLeft}>
+            {[...Array(12)].map((_, i) => (
+              <View key={i} style={styles.perforation} />
+            ))}
           </View>
 
-          <View style={styles.divider} />
+          {/* Ticket Card */}
+          <View style={styles.ticketCard}>
+            {/* Event Image */}
+            <ImageBackground
+              source={{ uri: event.image || 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800' }}
+              style={styles.ticketImage}
+              imageStyle={styles.ticketImageStyle}
+              resizeMode="cover"
+            >
+              <View style={styles.imageOverlay} />
+            </ImageBackground>
 
-          <View style={styles.priceSection}>
-            <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Ticket Price</Text>
-              <Text style={styles.priceValue}>{event.price} USDC</Text>
+            {/* Ticket Content */}
+            <View style={styles.ticketContent}>
+              <Text style={styles.eventOrganizerLabel}>Local Music Present</Text>
+              <Text style={styles.eventName}>{event.name}</Text>
+              
+              <View style={styles.ticketDetails}>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Date</Text>
+                  <Text style={styles.detailValue}>{event.date}</Text>
+                </View>
+                
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Time</Text>
+                  <Text style={styles.detailValue}>{event.time}</Text>
+                </View>
+                
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Place</Text>
+                  <Text style={styles.detailValue}>{event.location}</Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Check In Type</Text>
+                  <Text style={styles.detailValue}>General Admission</Text>
+                </View>
+              </View>
+
+              {/* Price Section */}
+              <View style={styles.priceSection}>
+                <View style={styles.priceRow}>
+                  <Text style={styles.priceLabel}>Ticket Price</Text>
+                  <Text style={styles.priceValue}>{event.price} USDC</Text>
+                </View>
+
+                <View style={styles.priceRow}>
+                  <Text style={styles.priceLabel}>Transaction Fee</Text>
+                  <Text style={styles.feeValue}>0 USDC</Text>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>Total</Text>
+                  <Text style={styles.totalValue}>{event.price} USDC</Text>
+                </View>
+              </View>
             </View>
 
-            <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Transaction Fee</Text>
-              <Text style={styles.feeValue}>0 USDC</Text>
+            {/* Perforated Line */}
+            <View style={styles.perforatedLine}>
+              <View style={styles.perforatedLineLeft} />
+              <View style={styles.perforatedLineDots}>
+                {[...Array(20)].map((_, i) => (
+                  <View key={i} style={styles.perforatedDot} />
+                ))}
+              </View>
+              <View style={styles.perforatedLineRight} />
             </View>
 
-            <View style={styles.divider} />
-
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>{event.price} USDC</Text>
+            {/* Barcode Section */}
+            <View style={styles.barcodeSection}>
+              <View style={styles.barcodeContainer}>
+                {[...Array(30)].map((_, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.barcodeLine,
+                      { width: Math.random() * 4 + 2, marginRight: 1 },
+                    ]}
+                  />
+                ))}
+              </View>
+              <Text style={styles.barcodeText}>TKT-{event.id.substring(0, 8).toUpperCase()}</Text>
             </View>
+          </View>
+
+          {/* Perforated right edge */}
+          <View style={styles.perforatedRight}>
+            {[...Array(12)].map((_, i) => (
+              <View key={i} style={styles.perforation} />
+            ))}
           </View>
         </View>
 
@@ -277,47 +342,101 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
   },
-  eventCard: {
+  ticketContainer: {
+    flexDirection: 'row',
+    marginBottom: 24,
+  },
+  perforatedLeft: {
+    width: 8,
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  perforatedRight: {
+    width: 8,
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  perforation: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#000000',
+    borderWidth: 1,
+    borderColor: '#333333',
+  },
+  ticketCard: {
+    flex: 1,
     backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#333333',
     shadowColor: '#FCFC65',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 5,
+    elevation: 8,
+  },
+  ticketImage: {
+    width: '100%',
+    height: 200,
+    justifyContent: 'flex-end',
+  },
+  ticketImageStyle: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  ticketContent: {
+    padding: 20,
+  },
+  eventOrganizerLabel: {
+    fontSize: 12,
+    color: '#999999',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   eventName: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 24,
+    marginBottom: 20,
+  },
+  ticketDetails: {
+    marginBottom: 20,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#999999',
     fontWeight: '500',
   },
   detailValue: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#FFFFFF',
     fontWeight: '600',
+    textAlign: 'right',
+    flex: 1,
+    marginLeft: 16,
   },
   divider: {
     height: 1,
     backgroundColor: '#333333',
-    marginVertical: 20,
+    marginVertical: 16,
   },
   priceSection: {
     marginTop: 8,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
   },
   priceRow: {
     flexDirection: 'row',
@@ -400,5 +519,66 @@ const styles = StyleSheet.create({
     marginTop: 16,
     color: '#FFFFFF',
     fontSize: 14,
+  },
+  perforatedLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginVertical: 16,
+  },
+  perforatedLineLeft: {
+    width: 20,
+    height: 1,
+    backgroundColor: '#000000',
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
+  },
+  perforatedLineDots: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  perforatedDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#333333',
+  },
+  perforatedLineRight: {
+    width: 20,
+    height: 1,
+    backgroundColor: '#000000',
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+  },
+  barcodeSection: {
+    alignItems: 'center',
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  barcodeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    backgroundColor: '#000000',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333333',
+    width: '100%',
+  },
+  barcodeLine: {
+    height: 50,
+    backgroundColor: '#FFFFFF',
+  },
+  barcodeText: {
+    fontSize: 12,
+    color: '#999999',
+    letterSpacing: 2,
+    fontWeight: '600',
   },
 });

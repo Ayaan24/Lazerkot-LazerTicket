@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   ScrollView,
   SafeAreaView,
+  ImageBackground,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
@@ -112,109 +113,106 @@ export default function MyTicketScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <Header title="My Ticket" showBack={true} />
 
-        {/* Date and Route */}
-        <View style={styles.dateRouteSection}>
-          <Text style={styles.dateTime}>{event.date}, {event.time}</Text>
-          <Text style={styles.route}>{event.location}</Text>
-        </View>
-
         {/* Ticket Card */}
         <View style={styles.ticketContainer}>
-          {/* Perforated left edge */}
-          <View style={styles.perforatedLeft}>
-            {[...Array(8)].map((_, i) => (
-              <View key={i} style={styles.perforation} />
-            ))}
-          </View>
-
           {/* Ticket Content */}
           <View style={styles.ticketCard}>
-            {/* Passenger Section */}
-            <View style={styles.passengerSection}>
-              <Text style={styles.passengerLabel}>Passenger</Text>
-              <Text style={styles.passengerName}>You</Text>
-            </View>
+            {/* Event Image */}
+            <ImageBackground
+              source={{ uri: event.image || 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800' }}
+              style={styles.ticketImage}
+              imageStyle={styles.ticketImageStyle}
+              resizeMode="cover"
+            >
+              <View style={styles.imageOverlay} />
+            </ImageBackground>
 
-            {/* Journey Timeline */}
-            <View style={styles.journeySection}>
-              <View style={styles.timelineContainer}>
-                <View style={styles.timelineLeft}>
-                  <Text style={styles.timeText}>{event.time}</Text>
-                  <View style={styles.timelineDot} />
-                  <Text style={styles.locationText}>{event.location.split(',')[0]}</Text>
-                  <Text style={styles.stationText}>{event.location}</Text>
-                </View>
-
-                <View style={styles.timelineCenter}>
-                  <Text style={styles.durationText}>Event</Text>
-                  <View style={styles.eventIcon}>
-                    <Ionicons name="musical-notes" size={20} color="#000000" />
+            {/* Ticket Content */}
+            <View style={styles.ticketContent}>
+              <Text style={styles.eventOrganizerLabel}>Local Music Present</Text>
+              <Text style={styles.eventName}>{event.name}</Text>
+              
+              {/* Two Column Layout for Details */}
+              <View style={styles.ticketDetailsGrid}>
+                <View style={styles.detailsColumn}>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Date</Text>
+                    <Text style={styles.detailValue}>{event.date}</Text>
+                  </View>
+                  
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Check In Type</Text>
+                    <Text style={styles.detailValue}>General Admission</Text>
+                  </View>
+                  
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Place</Text>
+                    <Text style={styles.detailValue}>{event.location}</Text>
                   </View>
                 </View>
+                
+                <View style={styles.detailsColumn}>
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Time</Text>
+                    <Text style={styles.detailValue}>{event.time}</Text>
+                  </View>
+                  
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Order ID</Text>
+                    <Text style={styles.detailValue}>{bookingRef}</Text>
+                  </View>
+                </View>
+              </View>
 
-                <View style={styles.timelineRight}>
-                  <Text style={styles.timeText}>11:00 PM</Text>
-                  <View style={styles.timelineDotEnd} />
-                  <Text style={styles.locationText}>End</Text>
-                  <Text style={styles.stationText}>Event Concludes</Text>
+              {/* Status Badge */}
+              <View style={styles.statusSection}>
+                <View style={[styles.statusBadge, isUsed && styles.statusBadgeUsed]}>
+                  <Text style={[styles.statusText, isUsed && styles.statusTextUsed]}>
+                    {isValid ? 'Valid' : 'Used'}
+                  </Text>
                 </View>
               </View>
             </View>
 
-            {/* Booking Reference */}
-            <View style={styles.bookingSection}>
-              <Text style={styles.bookingLabel}>Booking Reference</Text>
-              <Text style={styles.bookingRef}>{bookingRef}</Text>
-            </View>
-
-            {/* Ticket Details */}
-            <View style={styles.detailsSection}>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Event</Text>
-                <Text style={styles.detailValue}>{event.name}</Text>
+            {/* Perforated Line with Semi-circles */}
+            <View style={styles.perforatedLineContainer}>
+              {/* Left Semi-circle */}
+              <View style={styles.leftCutout}>
+                <View style={styles.semiCircle} />
               </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Type</Text>
-                <Text style={styles.detailValue}>{event.category}</Text>
+              
+              {/* Perforated Line */}
+              <View style={styles.perforatedLine}>
+                <View style={styles.perforatedLineLeft} />
+                <View style={styles.perforatedLineDots}>
+                  {[...Array(25)].map((_, i) => (
+                    <View key={i} style={styles.perforatedDot} />
+                  ))}
+                </View>
+                <View style={styles.perforatedLineRight} />
               </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Price</Text>
-                <Text style={styles.detailValue}>{event.price} USDC</Text>
-              </View>
-            </View>
-
-            {/* Status Badge */}
-            <View style={styles.statusSection}>
-              <View style={[styles.statusBadge, isUsed && styles.statusBadgeUsed]}>
-                <Text style={[styles.statusText, isUsed && styles.statusTextUsed]}>
-                  {isValid ? 'Valid' : 'Used'}
-                </Text>
+              
+              {/* Right Semi-circle */}
+              <View style={styles.rightCutout}>
+                <View style={styles.semiCircle} />
               </View>
             </View>
 
             {/* Barcode Section */}
             <View style={styles.barcodeSection}>
               <View style={styles.barcodeContainer}>
-                {/* Simulated barcode */}
-                {[...Array(20)].map((_, i) => (
+                {[...Array(30)].map((_, i) => (
                   <View
                     key={i}
                     style={[
                       styles.barcodeLine,
-                      { width: Math.random() * 3 + 2, marginRight: 2 },
+                      { width: Math.random() * 4 + 2, marginRight: 1 },
                     ]}
                   />
                 ))}
               </View>
               <Text style={styles.barcodeText}>{bookingRef}</Text>
             </View>
-          </View>
-
-          {/* Perforated right edge */}
-          <View style={styles.perforatedRight}>
-            {[...Array(8)].map((_, i) => (
-              <View key={i} style={styles.perforation} />
-            ))}
           </View>
         </View>
 
@@ -254,172 +252,113 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
   },
-  dateRouteSection: {
-    marginBottom: 24,
-  },
-  dateTime: {
-    fontSize: 14,
-    color: '#999999',
-    marginBottom: 8,
-  },
-  route: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
   ticketContainer: {
-    flexDirection: 'row',
     marginBottom: 24,
-  },
-  perforatedLeft: {
-    width: 8,
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-  perforatedRight: {
-    width: 8,
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-  perforation: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#000000',
-    borderWidth: 1,
-    borderColor: '#333333',
+    marginHorizontal: 0,
   },
   ticketCard: {
-    flex: 1,
     backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 20,
+    overflow: 'visible',
     borderWidth: 1,
     borderColor: '#333333',
     shadowColor: '#FCFC65',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 5,
+    elevation: 8,
+    width: '100%',
   },
-  passengerSection: {
-    marginBottom: 24,
-  },
-  passengerLabel: {
-    fontSize: 12,
-    color: '#999999',
-    marginBottom: 8,
-  },
-  passengerName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  journeySection: {
-    marginBottom: 24,
-  },
-  timelineContainer: {
+  perforatedLineContainer: {
+    position: 'relative',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  timelineLeft: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  timelineCenter: {
     alignItems: 'center',
-    paddingHorizontal: 16,
+    marginVertical: 0,
+    height: 50,
+    paddingVertical: 0,
   },
-  timelineRight: {
-    flex: 1,
+  leftCutout: {
+    position: 'absolute',
+    left: -30,
+    top: 10,
+    width: 55,
+    height: 55,
+    zIndex: 10,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  rightCutout: {
+    position: 'absolute',
+    right: -30,
+    top: 10,
+    width: 55,
+    height: 55,
+    zIndex: 10,
+    justifyContent: 'center',
     alignItems: 'flex-end',
   },
-  timeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 8,
-  },
-  timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#FCFC65',
-    marginBottom: 8,
-  },
-  timelineDotEnd: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#1A1A1A',
+  semiCircle: {
+    width: 55,
+    height: 55,
+    borderRadius: 30,
+    backgroundColor: '#000000',
     borderWidth: 2,
-    borderColor: '#FCFC65',
-    marginBottom: 8,
+    
   },
-  locationText: {
-    fontSize: 18,
+  ticketImage: {
+    width: '100%',
+    height: 200,
+    justifyContent: 'flex-end',
+  },
+  ticketImageStyle: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  ticketContent: {
+    padding: 20,
+  },
+  eventOrganizerLabel: {
+    fontSize: 12,
+    color: '#999999',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  eventName: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 4,
+    marginBottom: 20,
   },
-  stationText: {
-    fontSize: 12,
-    color: '#999999',
-  },
-  durationText: {
-    fontSize: 12,
-    color: '#999999',
-    marginBottom: 8,
-  },
-  eventIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FCFC65',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bookingSection: {
-    marginBottom: 24,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#333333',
-  },
-  bookingLabel: {
-    fontSize: 12,
-    color: '#999999',
-    marginBottom: 8,
-  },
-  bookingRef: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  detailsSection: {
+  ticketDetailsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#333333',
+    marginBottom: 20,
+    gap: 20,
+  },
+  detailsColumn: {
+    flex: 1,
   },
   detailItem: {
-    alignItems: 'center',
+    marginBottom: 16,
   },
   detailLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#999999',
+    fontWeight: '500',
     marginBottom: 4,
   },
   detailValue: {
     fontSize: 14,
-    fontWeight: '600',
     color: '#FFFFFF',
+    fontWeight: '600',
   },
   statusSection: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   statusBadge: {
     backgroundColor: '#FCFC65',
@@ -440,11 +379,40 @@ const styles = StyleSheet.create({
   statusTextUsed: {
     color: '#999999',
   },
+  perforatedLine: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+    height: 2,
+    marginTop: 30,
+  },
+  perforatedLineLeft: {
+    width: 0,
+    height: 0,
+  },
+  perforatedLineDots: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    height: 2,
+  },
+  perforatedDot: {
+    width: 10,
+    height: 2,
+    backgroundColor: '#666666',
+    borderRadius: 1,
+  },
+  perforatedLineRight: {
+    width: 0,
+    height: 0,
+  },
   barcodeSection: {
     alignItems: 'center',
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#333333',
+    paddingBottom: 20,
+    paddingHorizontal: 20,
   },
   barcodeContainer: {
     flexDirection: 'row',
@@ -457,15 +425,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#333333',
+    width: '100%',
   },
   barcodeLine: {
-    height: 40,
+    height: 50,
     backgroundColor: '#FFFFFF',
   },
   barcodeText: {
     fontSize: 12,
     color: '#999999',
     letterSpacing: 2,
+    fontWeight: '600',
   },
   enterButton: {
     backgroundColor: '#FCFC65',
