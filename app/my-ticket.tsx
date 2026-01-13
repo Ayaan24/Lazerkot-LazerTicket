@@ -44,7 +44,7 @@ export default function MyTicketScreen() {
   const [allTickets, setAllTickets] = useState<TicketWithEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [testMode, setTestMode] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'used' | 'unused'>('all');
+  const [filter, setFilter] = useState<'used' | 'unused'>('unused');
   const [selectedTicket, setSelectedTicket] = useState<TicketWithEvent | null>(null);
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function MyTicketScreen() {
   const filteredTickets = allTickets.filter(ticket => {
     if (filter === 'used') return ticket.used;
     if (filter === 'unused') return !ticket.used;
-    return true;
+    return false;
   });
 
   if (loading) {
@@ -195,14 +195,6 @@ export default function MyTicketScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Toggle Filter */}
         <View style={styles.filterContainer}>
-          <TouchableOpacity
-            style={[styles.filterButton, filter === 'all' && styles.filterButtonActive]}
-            onPress={() => setFilter('all')}
-          >
-            <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>
-              All ({allTickets.length})
-            </Text>
-          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterButton, filter === 'unused' && styles.filterButtonActive]}
             onPress={() => setFilter('unused')}
