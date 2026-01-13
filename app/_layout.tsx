@@ -39,6 +39,20 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen 
+          name="splash" 
+          options={{ 
+            title: 'Splash',
+            headerShown: false,
+          }} 
+        />
+        <Stack.Screen 
+          name="onboarding" 
+          options={{ 
+            title: 'Onboarding',
+            headerShown: false,
+          }} 
+        />
+        <Stack.Screen 
           name="login" 
           options={{ 
             title: 'Login',
