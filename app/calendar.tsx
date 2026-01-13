@@ -70,23 +70,43 @@ export default function CalendarScreen() {
   function getEventsForDate(year: number, month: number, date: number): Event[] {
     const foundEvents = EVENTS.filter(event => {
       try {
-        // Parse date string like "January 15, 2026"
-        const eventDate = new Date(event.date);
-        if (isNaN(eventDate.getTime())) {
-          console.log('Invalid date:', event.date);
+        // Parse date string like "January 15, 2026" or "February 01, 2026"
+        // Manually parse to handle all formats reliably
+        const dateParts = event.date.split(' ');
+        if (dateParts.length !== 3) {
           return false;
         }
+        
+        const monthName = dateParts[0];
+        const dayStr = dateParts[1].replace(',', '');
+        const day = parseInt(dayStr, 10);
+        const yearStr = dateParts[2];
+        
+        const monthMap: { [key: string]: number } = {
+          'January': 0, 'February': 1, 'March': 2, 'April': 3,
+          'May': 4, 'June': 5, 'July': 6, 'August': 7,
+          'September': 8, 'October': 9, 'November': 10, 'December': 11
+        };
+        
+        const monthNum = monthMap[monthName];
+        if (monthNum === undefined || isNaN(day) || isNaN(parseInt(yearStr, 10))) {
+          return false;
+        }
+        
+        const eventDate = new Date(parseInt(yearStr, 10), monthNum, day);
+        
+        if (isNaN(eventDate.getTime())) {
+          return false;
+        }
+        
         const matches = (
           eventDate.getFullYear() === year &&
           eventDate.getMonth() === month &&
           eventDate.getDate() === date
         );
-        if (matches) {
-          console.log(`Event found for ${year}-${month + 1}-${date}:`, event.name);
-        }
+        
         return matches;
       } catch (error) {
-        console.error('Error parsing event date:', event.date, error);
         return false;
       }
     });
@@ -207,24 +227,29 @@ export default function CalendarScreen() {
               onPress={() => handleDatePress(day)}
               disabled={!day.hasEvent}
             >
-              <View
-                style={[
-                  day.isToday && styles.calendarCellToday,
-                  day.hasEvent && !day.isToday && styles.calendarCellHasEvent,
-                ]}
-              >
+              {day.hasEvent && !day.isToday ? (
+                <View style={styles.calendarCellHasEvent}>
+                  <Text style={styles.calendarDateTextHasEvent}>
+                    {day.date}
+                  </Text>
+                </View>
+              ) : day.isToday ? (
+                <View style={styles.calendarCellToday}>
+                  <Text style={styles.calendarDateTextToday}>
+                    {day.date}
+                  </Text>
+                </View>
+              ) : (
                 <Text
                   style={[
                     styles.calendarDateText,
                     !day.isCurrentMonth && styles.calendarDateTextInactive,
-                    day.isToday && styles.calendarDateTextToday,
-                    day.hasEvent && !day.isToday && styles.calendarDateTextHasEvent,
-                    !day.isToday && !day.hasEvent && styles.calendarDateTextNormal,
+                    day.isCurrentMonth && styles.calendarDateTextNormal,
                   ]}
                 >
                   {day.date}
                 </Text>
-              </View>
+              )}
               {day.hasEvent && !day.isToday && (
                 <View style={styles.eventIndicator} />
               )}
