@@ -84,6 +84,13 @@ export default function RootLayout() {
             title: 'Entry Verification',
           }} 
         />
+        <Stack.Screen 
+          name="calendar" 
+          options={{ 
+            title: 'Calendar',
+            headerShown: false,
+          }} 
+        />
       </Stack>
     </LazorKitProvider>
   );

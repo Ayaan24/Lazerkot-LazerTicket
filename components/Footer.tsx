@@ -41,8 +41,17 @@ export default function Footer() {
         )}
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.footerButton}>
-        <Ionicons name="calendar-outline" size={24} color="#000000" />
+      <TouchableOpacity 
+        style={styles.footerButton}
+        onPress={() => router.push('/calendar')}
+      >
+        {isActive('/calendar') ? (
+          <View style={styles.footerIconActive}>
+            <Ionicons name="calendar" size={24} color="#000000" />
+          </View>
+        ) : (
+          <Ionicons name="calendar-outline" size={24} color="#000000" />
+        )}
       </TouchableOpacity>
       
       <TouchableOpacity style={styles.footerButton}>

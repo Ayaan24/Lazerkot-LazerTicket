@@ -21,7 +21,7 @@ export const EVENTS: Event[] = [
   {
     id: 'summer-festival-2024',
     name: 'Summer Music Festival',
-    date: 'July 15, 2024',
+    date: 'January 15, 2026',
     time: '6:00 PM',
     location: 'Central Park, New York',
     price: 50,
@@ -33,7 +33,7 @@ export const EVENTS: Event[] = [
   {
     id: 'jazz-night-2024',
     name: 'Jazz Night Under the Stars',
-    date: 'July 20, 2024',
+    date: 'January 16, 2026',
     time: '8:00 PM',
     location: 'Blue Note Jazz Club, New York',
     price: 35,
@@ -45,7 +45,7 @@ export const EVENTS: Event[] = [
   {
     id: 'rock-concert-2024',
     name: 'Rock Legends Live',
-    date: 'July 25, 2024',
+    date: 'January 17, 2026',
     time: '7:30 PM',
     location: 'Madison Square Garden, New York',
     price: 75,
@@ -57,7 +57,7 @@ export const EVENTS: Event[] = [
   {
     id: 'electronic-fest-2024',
     name: 'Electronic Music Festival',
-    date: 'August 1, 2024',
+    date: 'January 18, 2026',
     time: '5:00 PM',
     location: 'Brooklyn Mirage, New York',
     price: 60,
@@ -69,7 +69,7 @@ export const EVENTS: Event[] = [
   {
     id: 'classical-symphony-2024',
     name: 'Classical Symphony Night',
-    date: 'August 5, 2024',
+    date: 'January 20, 2026',
     time: '7:00 PM',
     location: 'Carnegie Hall, New York',
     price: 45,
@@ -81,7 +81,7 @@ export const EVENTS: Event[] = [
   {
     id: 'indie-pop-2024',
     name: 'Indie Pop Showcase',
-    date: 'August 10, 2024',
+    date: 'January 21, 2026',
     time: '8:30 PM',
     location: 'Bowery Ballroom, New York',
     price: 30,
@@ -93,7 +93,7 @@ export const EVENTS: Event[] = [
   {
     id: 'hip-hop-battle-2024',
     name: 'Hip Hop Battle Championship',
-    date: 'August 15, 2024',
+    date: 'January 22, 2026',
     time: '9:00 PM',
     location: 'Apollo Theater, New York',
     price: 40,
@@ -105,7 +105,7 @@ export const EVENTS: Event[] = [
   {
     id: 'country-music-2024',
     name: 'Country Music Night',
-    date: 'August 20, 2024',
+    date: 'January 24, 2026',
     time: '7:00 PM',
     location: 'Terminal 5, New York',
     price: 35,
@@ -117,7 +117,7 @@ export const EVENTS: Event[] = [
   {
     id: 'reggae-festival-2024',
     name: 'Reggae Festival',
-    date: 'August 25, 2024',
+    date: 'January 25, 2026',
     time: '4:00 PM',
     location: 'Prospect Park, Brooklyn',
     price: 25,
@@ -129,7 +129,7 @@ export const EVENTS: Event[] = [
   {
     id: 'acoustic-session-2024',
     name: 'Acoustic Sessions',
-    date: 'August 30, 2024',
+    date: 'January 26, 2026',
     time: '6:30 PM',
     location: 'The Bitter End, New York',
     price: 20,
@@ -143,7 +143,7 @@ export const EVENTS: Event[] = [
   {
     id: 'basketball-game-2024',
     name: 'NBA Championship Game',
-    date: 'July 18, 2024',
+    date: 'January 28, 2026',
     time: '8:00 PM',
     location: 'Barclays Center, Brooklyn',
     price: 120,
@@ -155,7 +155,7 @@ export const EVENTS: Event[] = [
   {
     id: 'marathon-2024',
     name: 'New York City Marathon',
-    date: 'July 22, 2024',
+    date: 'January 29, 2026',
     time: '7:00 AM',
     location: 'Central Park, New York',
     price: 15,
@@ -167,7 +167,7 @@ export const EVENTS: Event[] = [
   {
     id: 'tennis-tournament-2024',
     name: 'Tennis Championship',
-    date: 'July 28, 2024',
+    date: 'January 30, 2026',
     time: '2:00 PM',
     location: 'USTA Billie Jean King, New York',
     price: 55,
@@ -179,7 +179,7 @@ export const EVENTS: Event[] = [
   {
     id: 'soccer-match-2024',
     name: 'Soccer League Match',
-    date: 'August 3, 2024',
+    date: 'February 01, 2026',
     time: '6:00 PM',
     location: 'Yankee Stadium, New York',
     price: 40,
@@ -191,7 +191,7 @@ export const EVENTS: Event[] = [
   {
     id: 'boxing-match-2024',
     name: 'Boxing Championship',
-    date: 'August 8, 2024',
+    date: 'February 02, 2026',
     time: '9:00 PM',
     location: 'Madison Square Garden, New York',
     price: 90,
@@ -203,7 +203,7 @@ export const EVENTS: Event[] = [
   {
     id: 'baseball-game-2024',
     name: 'Baseball League Game',
-    date: 'August 12, 2024',
+    date: 'February 03, 2026',
     time: '7:30 PM',
     location: 'Citi Field, Queens',
     price: 35,
@@ -215,7 +215,7 @@ export const EVENTS: Event[] = [
   {
     id: 'cycling-race-2024',
     name: 'Cycling Race Championship',
-    date: 'August 18, 2024',
+    date: 'February 05, 2026',
     time: '10:00 AM',
     location: 'Prospect Park, Brooklyn',
     price: 20,
@@ -227,7 +227,7 @@ export const EVENTS: Event[] = [
   {
     id: 'yoga-festival-2024',
     name: 'Yoga Festival',
-    date: 'August 22, 2024',
+    date: 'February 06, 2026',
     time: '8:00 AM',
     location: 'Central Park, New York',
     price: 25,
@@ -241,7 +241,7 @@ export const EVENTS: Event[] = [
   {
     id: 'hamlet-2024',
     name: 'Hamlet - Shakespeare',
-    date: 'July 17, 2024',
+    date: 'February 07, 2026',
     time: '7:30 PM',
     location: 'Lincoln Center, New York',
     price: 65,
@@ -253,7 +253,7 @@ export const EVENTS: Event[] = [
   {
     id: 'musical-wicked-2024',
     name: 'Wicked - The Musical',
-    date: 'July 24, 2024',
+    date: 'February 09, 2026',
     time: '8:00 PM',
     location: 'Gershwin Theatre, New York',
     price: 85,
@@ -265,7 +265,7 @@ export const EVENTS: Event[] = [
   {
     id: 'comedy-play-2024',
     name: 'Modern Comedy Play',
-    date: 'August 2, 2024',
+    date: 'February 10, 2026',
     time: '7:00 PM',
     location: 'Second Stage Theater, New York',
     price: 45,
@@ -277,7 +277,7 @@ export const EVENTS: Event[] = [
   {
     id: 'dance-performance-2024',
     name: 'Contemporary Dance Show',
-    date: 'August 7, 2024',
+    date: 'February 11, 2026',
     time: '8:30 PM',
     location: 'Joyce Theater, New York',
     price: 50,
@@ -289,7 +289,7 @@ export const EVENTS: Event[] = [
   {
     id: 'opera-night-2024',
     name: 'Opera Night',
-    date: 'August 14, 2024',
+    date: 'February 13, 2026',
     time: '7:00 PM',
     location: 'Metropolitan Opera, New York',
     price: 70,
@@ -301,7 +301,7 @@ export const EVENTS: Event[] = [
   {
     id: 'drama-show-2024',
     name: 'Drama Showcase',
-    date: 'August 19, 2024',
+    date: 'February 14, 2026',
     time: '7:30 PM',
     location: 'Public Theater, New York',
     price: 40,
@@ -315,7 +315,7 @@ export const EVENTS: Event[] = [
   {
     id: 'standup-comedy-2024',
     name: 'Stand-Up Comedy Night',
-    date: 'July 19, 2024',
+    date: 'February 15, 2026',
     time: '9:00 PM',
     location: 'Comedy Cellar, New York',
     price: 25,
@@ -327,7 +327,7 @@ export const EVENTS: Event[] = [
   {
     id: 'improv-show-2024',
     name: 'Improv Comedy Show',
-    date: 'August 4, 2024',
+    date: 'February 17, 2026',
     time: '8:00 PM',
     location: 'Upright Citizens Brigade, New York',
     price: 20,
@@ -339,7 +339,7 @@ export const EVENTS: Event[] = [
   {
     id: 'comedy-festival-2024',
     name: 'Comedy Festival',
-    date: 'August 11, 2024',
+    date: 'February 18, 2026',
     time: '7:00 PM',
     location: 'Caroline\'s on Broadway, New York',
     price: 30,
@@ -353,7 +353,7 @@ export const EVENTS: Event[] = [
   {
     id: 'art-exhibition-2024',
     name: 'Modern Art Exhibition',
-    date: 'July 21, 2024',
+    date: 'February 19, 2026',
     time: '10:00 AM',
     location: 'MoMA, New York',
     price: 30,
@@ -365,7 +365,7 @@ export const EVENTS: Event[] = [
   {
     id: 'photography-show-2024',
     name: 'Photography Showcase',
-    date: 'August 6, 2024',
+    date: 'February 21, 2026',
     time: '6:00 PM',
     location: 'International Center of Photography, New York',
     price: 25,
@@ -377,7 +377,7 @@ export const EVENTS: Event[] = [
   {
     id: 'street-art-tour-2024',
     name: 'Street Art Tour',
-    date: 'August 13, 2024',
+    date: 'February 22, 2026',
     time: '2:00 PM',
     location: 'Brooklyn, New York',
     price: 20,
@@ -391,7 +391,7 @@ export const EVENTS: Event[] = [
   {
     id: 'food-festival-2024',
     name: 'Food Festival',
-    date: 'July 23, 2024',
+    date: 'February 23, 2026',
     time: '12:00 PM',
     location: 'Union Square, New York',
     price: 15,
@@ -403,7 +403,7 @@ export const EVENTS: Event[] = [
   {
     id: 'wine-tasting-2024',
     name: 'Wine Tasting Event',
-    date: 'August 9, 2024',
+    date: 'February 25, 2026',
     time: '6:00 PM',
     location: 'Wine Bar, New York',
     price: 45,
@@ -417,7 +417,7 @@ export const EVENTS: Event[] = [
   {
     id: 'tech-conference-2024',
     name: 'Tech Conference 2024',
-    date: 'July 26, 2024',
+    date: 'February 26, 2026',
     time: '9:00 AM',
     location: 'Javits Center, New York',
     price: 100,
@@ -429,7 +429,7 @@ export const EVENTS: Event[] = [
   {
     id: 'startup-pitch-2024',
     name: 'Startup Pitch Night',
-    date: 'August 16, 2024',
+    date: 'February 27, 2026',
     time: '7:00 PM',
     location: 'WeWork, New York',
     price: 35,
