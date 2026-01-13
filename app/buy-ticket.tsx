@@ -26,7 +26,6 @@ import {
 import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { Ionicons } from '@expo/vector-icons';
 import { getEventById } from '@/lib/events';
 
@@ -193,13 +192,6 @@ export default function BuyTicketScreen() {
 
         {/* Ticket Preview */}
         <View style={styles.ticketContainer}>
-          {/* Perforated left edge */}
-          <View style={styles.perforatedLeft}>
-            {[...Array(12)].map((_, i) => (
-              <View key={i} style={styles.perforation} />
-            ))}
-          </View>
-
           {/* Ticket Card */}
           <View style={styles.ticketCard}>
             {/* Event Image */}
@@ -264,49 +256,29 @@ export default function BuyTicketScreen() {
             <View style={styles.perforatedLine}>
               <View style={styles.perforatedLineLeft} />
               <View style={styles.perforatedLineDots}>
-                {[...Array(20)].map((_, i) => (
+                {[...Array(25)].map((_, i) => (
                   <View key={i} style={styles.perforatedDot} />
                 ))}
               </View>
               <View style={styles.perforatedLineRight} />
             </View>
 
-            {/* Barcode Section */}
-            <View style={styles.barcodeSection}>
-              <View style={styles.barcodeContainer}>
-                {[...Array(30)].map((_, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.barcodeLine,
-                      { width: Math.random() * 4 + 2, marginRight: 1 },
-                    ]}
-                  />
-                ))}
-              </View>
-              <Text style={styles.barcodeText}>TKT-{event.id.substring(0, 8).toUpperCase()}</Text>
+            {/* Gasless Transaction Info */}
+            <View style={styles.gaslessSection}>
+              <Ionicons name="flash" size={32} color="#FCFC65" style={{ marginBottom: 12 }} />
+              <Text style={styles.gaslessTitle}>Gasless Transaction</Text>
+              <Text style={styles.gaslessText}>
+                This purchase uses a gasless transaction sponsored by Paymaster.
+                You won't be charged any transaction fees.
+              </Text>
             </View>
           </View>
-
-          {/* Perforated right edge */}
-          <View style={styles.perforatedRight}>
-            {[...Array(12)].map((_, i) => (
-              <View key={i} style={styles.perforation} />
-            ))}
-          </View>
         </View>
 
-        {/* Info Box */}
-        <View style={styles.infoBox}>
-          <Ionicons name="flash" size={32} color="#FCFC65" style={{ marginBottom: 12 }} />
-          <Text style={styles.infoTitle}>Gasless Transaction</Text>
-          <Text style={styles.infoText}>
-            This purchase uses a gasless transaction sponsored by Paymaster.
-            You won't be charged any transaction fees.
-          </Text>
-        </View>
+      </ScrollView>
 
-        {/* Confirm Button */}
+      {/* Fixed Bottom Button Bar */}
+      <View style={styles.bottomButtonBar}>
         <TouchableOpacity
           style={[styles.confirmButton, processing && styles.confirmButtonDisabled]}
           onPress={handleConfirmPurchase}
@@ -318,14 +290,12 @@ export default function BuyTicketScreen() {
             <>
               <Ionicons name="lock-closed" size={24} color="#000000" style={{ marginRight: 12 }} />
               <Text style={styles.confirmButtonText}>
-                Confirm with Face ID
+                Confirm and Pay
               </Text>
             </>
           )}
         </TouchableOpacity>
-      </ScrollView>
-
-      <Footer />
+      </View>
     </SafeAreaView>
   );
 }
@@ -342,30 +312,27 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
   },
+  bottomButtonBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#000000',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 34,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
   ticketContainer: {
-    flexDirection: 'row',
     marginBottom: 24,
   },
-  perforatedLeft: {
-    width: 8,
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-  perforatedRight: {
-    width: 8,
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-  },
-  perforation: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#000000',
-    borderWidth: 1,
-    borderColor: '#333333',
-  },
   ticketCard: {
-    flex: 1,
     backgroundColor: '#1A1A1A',
     borderRadius: 20,
     overflow: 'hidden',
@@ -376,6 +343,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
+    width: '100%',
   },
   ticketImage: {
     width: '100%',
@@ -500,6 +468,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
+    width: '100%',
     shadowColor: '#FCFC65',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -524,14 +493,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginVertical: 16,
+    marginVertical: 20,
   },
   perforatedLineLeft: {
-    width: 20,
-    height: 1,
-    backgroundColor: '#000000',
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
+    width: 0,
+    height: 0,
   },
   perforatedLineDots: {
     flex: 1,
@@ -539,46 +505,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 8,
+    height: 2,
   },
   perforatedDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#333333',
+    width: 10,
+    height: 2,
+    backgroundColor: '#666666',
+    borderRadius: 1,
   },
   perforatedLineRight: {
-    width: 20,
-    height: 1,
-    backgroundColor: '#000000',
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
+    width: 0,
+    height: 0,
   },
-  barcodeSection: {
+  gaslessSection: {
     alignItems: 'center',
-    paddingBottom: 20,
+    paddingBottom: 24,
     paddingHorizontal: 20,
+    paddingTop: 8,
   },
-  barcodeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    backgroundColor: '#000000',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#333333',
-    width: '100%',
+  gaslessTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FCFC65',
+    marginBottom: 8,
   },
-  barcodeLine: {
-    height: 50,
-    backgroundColor: '#FFFFFF',
-  },
-  barcodeText: {
-    fontSize: 12,
-    color: '#999999',
-    letterSpacing: 2,
-    fontWeight: '600',
+  gaslessText: {
+    fontSize: 13,
+    color: '#CCCCCC',
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });
