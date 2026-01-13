@@ -54,8 +54,17 @@ export default function Footer() {
         )}
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.footerButton}>
-        <Ionicons name="settings-outline" size={24} color="#000000" />
+      <TouchableOpacity 
+        style={styles.footerButton}
+        onPress={() => router.push('/profile')}
+      >
+        {isActive('/profile') ? (
+          <View style={styles.footerIconActive}>
+            <Ionicons name="person" size={24} color="#000000" />
+          </View>
+        ) : (
+          <Ionicons name="person-outline" size={24} color="#000000" />
+        )}
       </TouchableOpacity>
     </View>
   );

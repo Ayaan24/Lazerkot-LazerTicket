@@ -91,6 +91,20 @@ export default function RootLayout() {
             headerShown: false,
           }} 
         />
+        <Stack.Screen 
+          name="profile" 
+          options={{ 
+            title: 'Profile',
+            headerShown: false,
+          }} 
+        />
+        <Stack.Screen 
+          name="edit-profile" 
+          options={{ 
+            title: 'Edit Profile',
+            headerShown: false,
+          }} 
+        />
       </Stack>
     </LazorKitProvider>
   );
