@@ -11,8 +11,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
-  Modal,
   FlatList,
+  ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Header from '@/components/Header';
@@ -31,14 +31,15 @@ interface CalendarDay {
   isToday: boolean;
   hasEvent: boolean;
   events: Event[];
+  hasUserTicket?: boolean;
 }
 
 export default function CalendarScreen() {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<CalendarDay | null>(null);
-  const [showPopup, setShowPopup] = useState(false);
   const [userTickets, setUserTickets] = useState<Set<string>>(new Set());
+  const [userTicketStatus, setUserTicketStatus] = useState<Map<string, boolean>>(new Map()); // eventId -> used
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -50,15 +51,18 @@ export default function CalendarScreen() {
         const allKeys = await AsyncStorage.getAllKeys();
         const ticketKeys = allKeys.filter(key => key.startsWith(TICKET_STORAGE_PREFIX));
         const tickets = new Set<string>();
+        const ticketStatus = new Map<string, boolean>();
         
         for (const key of ticketKeys) {
           const storedTicket = await AsyncStorage.getItem(key);
           if (storedTicket) {
             const ticket = JSON.parse(storedTicket);
             tickets.add(ticket.eventId);
+            ticketStatus.set(ticket.eventId, ticket.used || false);
           }
         }
         setUserTickets(tickets);
+        setUserTicketStatus(ticketStatus);
       } catch (error) {
         console.error('Error loading tickets:', error);
       }
@@ -141,6 +145,7 @@ export default function CalendarScreen() {
       
       const events = getEventsForDate(dayYear, dayMonth, dayDate);
       const hasEvent = events.length > 0;
+      const hasUserTicket = events.some(event => userTickets.has(event.id));
 
       days.push({
         date: dayDate,
@@ -150,6 +155,7 @@ export default function CalendarScreen() {
         isToday: isToday(dayDate),
         hasEvent,
         events,
+        hasUserTicket,
       });
     }
 
@@ -159,7 +165,8 @@ export default function CalendarScreen() {
   function handleDatePress(day: CalendarDay) {
     if (day.hasEvent) {
       setSelectedDate(day);
-      setShowPopup(true);
+    } else {
+      setSelectedDate(null);
     }
   }
 
@@ -172,7 +179,6 @@ export default function CalendarScreen() {
   }
 
   function handleEventPress(event: Event) {
-    setShowPopup(false);
     router.push({
       pathname: userTickets.has(event.id) ? '/my-ticket' : '/buy-ticket',
       params: { eventId: event.id },
@@ -190,7 +196,11 @@ export default function CalendarScreen() {
     <SafeAreaView style={styles.container}>
       <Header title="Calendar" showBack={true} />
       
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Month Navigation */}
         <View style={styles.monthContainer}>
           <TouchableOpacity onPress={handlePreviousMonth} style={styles.monthButton}>
@@ -227,6 +237,11 @@ export default function CalendarScreen() {
               onPress={() => handleDatePress(day)}
               disabled={!day.hasEvent}
             >
+              {day.hasUserTicket && (
+                <View style={styles.ticketIconContainer}>
+                  <Ionicons name="ticket" size={12} color="#FCFC65" />
+                </View>
+              )}
               {day.hasEvent && !day.isToday ? (
                 <View style={styles.calendarCellHasEvent}>
                   <Text style={styles.calendarDateTextHasEvent}>
@@ -256,63 +271,68 @@ export default function CalendarScreen() {
             </TouchableOpacity>
           ))}
         </View>
-      </ScrollView>
 
-      {/* Event Popup Modal */}
-      <Modal
-        visible={showPopup}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowPopup(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {selectedDate && new Date(selectedDate.year, selectedDate.month, selectedDate.date).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </Text>
+        {/* Events List Below Calendar */}
+        {selectedDate && selectedDate.events.length > 0 && (
+          <View style={styles.eventsSection}>
+            <Text style={styles.eventsSectionTitle}>
+              {new Date(selectedDate.year, selectedDate.month, selectedDate.date).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+            </Text>
+            {selectedDate.events.map((item) => (
               <TouchableOpacity
-                onPress={() => setShowPopup(false)}
-                style={styles.closeButton}
+                key={item.id}
+                style={styles.eventCard}
+                onPress={() => handleEventPress(item)}
               >
-                <Ionicons name="close" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-
-            <FlatList
-              data={selectedDate?.events || []}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.eventCard}
-                  onPress={() => handleEventPress(item)}
+                <ImageBackground
+                  source={{ uri: item.image || 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800' }}
+                  style={styles.eventCardBackground}
+                  imageStyle={styles.eventCardImageStyle}
+                  resizeMode="cover"
                 >
+                  <View style={styles.eventCardOverlay} />
                   <View style={styles.eventCardContent}>
-                    <Text style={styles.eventCardName}>{item.name}</Text>
-                    <Text style={styles.eventCardTime}>{item.time}</Text>
-                    <Text style={styles.eventCardLocation}>{item.location}</Text>
+                    <View style={styles.eventCardHeader}>
+                      <Text style={styles.eventCardName} numberOfLines={2}>{item.name}</Text>
+                      <Ionicons name="chevron-forward" size={20} color="#FFFFFF" style={styles.eventCardArrow} />
+                    </View>
+                    <View style={styles.eventCardDetails}>
+                      <View style={styles.eventCardDetailRow}>
+                        <Ionicons name="time-outline" size={16} color="#FCFC65" />
+                        <Text style={styles.eventCardTime} numberOfLines={1}>{item.time}</Text>
+                      </View>
+                      <View style={styles.eventCardDetailRow}>
+                        <Ionicons name="location-outline" size={16} color="#FCFC65" />
+                        <Text style={styles.eventCardLocation} numberOfLines={1}>{item.location}</Text>
+                      </View>
+                    </View>
                     {userTickets.has(item.id) && (
-                      <View style={styles.ticketBadge}>
-                        <Text style={styles.ticketBadgeText}>You have a ticket</Text>
+                      <View style={[
+                        styles.ticketBadge,
+                        userTicketStatus.get(item.id) && styles.ticketBadgeUsed
+                      ]}>
+                        <Ionicons 
+                          name={userTicketStatus.get(item.id) ? "checkmark-circle" : "ticket"} 
+                          size={14} 
+                          color="#000000" 
+                          style={{ marginRight: 4 }}
+                        />
+                        <Text style={styles.ticketBadgeText}>
+                          {userTicketStatus.get(item.id) ? 'Ticket Used' : 'You have a ticket'}
+                        </Text>
                       </View>
                     )}
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#999999" />
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={
-                <View style={styles.emptyEvents}>
-                  <Text style={styles.emptyEventsText}>No events on this date</Text>
-                </View>
-              }
-            />
+                </ImageBackground>
+              </TouchableOpacity>
+            ))}
           </View>
-        </View>
-      </Modal>
+        )}
+      </ScrollView>
 
       <Footer />
     </SafeAreaView>
@@ -330,6 +350,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 100,
+    flexGrow: 1,
   },
   monthContainer: {
     flexDirection: 'row',
@@ -419,6 +440,12 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: '#FCFC65',
   },
+  ticketIconContainer: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    zIndex: 10,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -454,51 +481,118 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  eventsSection: {
+    marginTop: 24,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+    paddingHorizontal: 0,
+    paddingBottom: 20,
+  },
+  eventsSectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 16,
+  },
   eventCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    width: '100%',
+    height: 240,
+    marginBottom: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  eventCardBackground: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'space-between',
+  },
+  eventCardImageStyle: {
+    borderRadius: 12,
+  },
+  eventCardOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 12,
   },
   eventCardContent: {
     flex: 1,
+    justifyContent: 'space-between',
+    zIndex: 1,
+    padding: 16,
+  },
+  eventCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
   eventCardName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 4,
+    flex: 1,
+    marginRight: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  eventCardDetails: {
+    gap: 8,
+    marginBottom: 8,
+  },
+  eventCardDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
   },
   eventCardTime: {
     fontSize: 14,
-    color: '#FCFC65',
-    marginBottom: 2,
+    color: '#FFFFFF',
+    fontWeight: '500',
+    flex: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   eventCardLocation: {
-    fontSize: 12,
-    color: '#999999',
-    marginTop: 4,
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '500',
+    flex: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  eventCardArrow: {
+    zIndex: 2,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 20,
+    padding: 4,
   },
   ticketBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     alignSelf: 'flex-start',
     backgroundColor: '#FCFC65',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: 8,
-    marginTop: 8,
+    marginTop: 12,
+  },
+  ticketBadgeUsed: {
+    backgroundColor: '#333333',
+    borderWidth: 1,
+    borderColor: '#666666',
   },
   ticketBadgeText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     color: '#000000',
-  },
-  emptyEvents: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyEventsText: {
-    fontSize: 14,
-    color: '#999999',
   },
 });
