@@ -224,46 +224,57 @@ export default function MyTicketScreen() {
         {/* Ticket Cards List */}
         <View style={styles.ticketsListContainer}>
           <Text style={styles.sectionTitle}>Your Tickets</Text>
-          <FlatList
-            data={filteredTickets}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.eventId}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.ticketCard,
-                  selectedTicket?.eventId === item.eventId && styles.ticketCardSelected,
-                ]}
-                onPress={() => handleTicketSelect(item)}
-              >
-                <ImageBackground
-                  source={{ uri: item.event.image || 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800' }}
-                  style={styles.ticketCardImage}
-                  imageStyle={styles.ticketCardImageStyle}
-                  resizeMode="cover"
+          {filter === 'unused' && filteredTickets.length === 0 ? (
+            <View style={styles.emptyFilterContainer}>
+              <Ionicons name="ticket-outline" size={48} color="#666666" />
+              <Text style={styles.emptyFilterText}>No Unused Tickets</Text>
+              <Text style={styles.emptyFilterSubtext}>
+                All your tickets have been used.{'\n'}
+                Browse events to purchase new tickets.
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredTickets}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item.eventId}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.ticketCard,
+                    selectedTicket?.eventId === item.eventId && styles.ticketCardSelected,
+                  ]}
+                  onPress={() => handleTicketSelect(item)}
                 >
-                  <View style={styles.ticketCardOverlay} />
-                  <View style={styles.ticketCardContent}>
-                    <View style={[styles.ticketCardStatus, item.used && styles.ticketCardStatusUsed]}>
-                      <Text style={[styles.ticketCardStatusText, item.used && styles.ticketCardStatusTextUsed]}>
-                        {item.used ? 'Used' : 'Valid'}
+                  <ImageBackground
+                    source={{ uri: item.event.image || 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800' }}
+                    style={styles.ticketCardImage}
+                    imageStyle={styles.ticketCardImageStyle}
+                    resizeMode="cover"
+                  >
+                    <View style={styles.ticketCardOverlay} />
+                    <View style={styles.ticketCardContent}>
+                      <View style={[styles.ticketCardStatus, item.used && styles.ticketCardStatusUsed]}>
+                        <Text style={[styles.ticketCardStatusText, item.used && styles.ticketCardStatusTextUsed]}>
+                          {item.used ? 'Used' : 'Valid'}
+                        </Text>
+                      </View>
+                      <Text style={styles.ticketCardEventName} numberOfLines={2}>
+                        {item.event.name}
                       </Text>
+                      <Text style={styles.ticketCardDate}>{item.event.date}</Text>
                     </View>
-                    <Text style={styles.ticketCardEventName} numberOfLines={2}>
-                      {item.event.name}
-                    </Text>
-                    <Text style={styles.ticketCardDate}>{item.event.date}</Text>
-                  </View>
-                </ImageBackground>
-              </TouchableOpacity>
-            )}
-            contentContainerStyle={styles.ticketsListContent}
-          />
+                  </ImageBackground>
+                </TouchableOpacity>
+              )}
+              contentContainerStyle={styles.ticketsListContent}
+            />
+          )}
         </View>
 
         {/* Full Ticket View */}
-        {selectedTicket && (
+        {selectedTicket && filteredTickets.length > 0 && (
           <View style={styles.fullTicketContainer}>
             <View style={styles.fullTicketCard}>
               {/* Event Image */}
@@ -478,6 +489,25 @@ const styles = StyleSheet.create({
   },
   ticketsListContent: {
     paddingRight: 20,
+  },
+  emptyFilterContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+  },
+  emptyFilterText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyFilterSubtext: {
+    fontSize: 14,
+    color: '#999999',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   ticketCard: {
     width: 200,
