@@ -20,13 +20,17 @@ import { useWallet } from '@lazorkit/wallet-mobile-adapter';
 import { ticketExists, getTicketData } from '@/lib/solana';
 import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getWalletAddress } from '@/lib/secure-storage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { EVENTS, CATEGORIES, getEventsByCategory, type Event } from '@/lib/events';
 
 export default function EventsScreen() {
   const router = useRouter();
-  const { isConnected } = useWallet();
+  const walletHook = useWallet() as any;
+  const { isConnected } = walletHook || {};
+  const wallet = walletHook?.wallet;
+  
   const [walletPublicKey, setWalletPublicKey] = useState<PublicKey | null>(null);
   const [loading, setLoading] = useState(true);
   const [testMode, setTestMode] = useState(false);
@@ -35,53 +39,100 @@ export default function EventsScreen() {
   const [userTickets, setUserTickets] = useState<Record<string, { used: boolean }>>({});
 
   useEffect(() => {
-    checkTestMode();
-  }, [isConnected]);
+    initializeScreen();
+  }, []);
 
-  async function checkTestMode() {
+  async function initializeScreen() {
     try {
-      const testModeEnabled = await AsyncStorage.getItem('test_mode');
+      // Show events immediately - don't wait for ticket checks
+      setLoading(false);
       
+      // Get wallet address (from SDK or storage)
+      const storedAddress = await getWalletAddress();
+      
+      let walletAddress: string | null = null;
+      
+      if (wallet?.smartWallet) {
+        walletAddress = wallet.smartWallet;
+      } else if (storedAddress) {
+        walletAddress = storedAddress;
+      }
+      
+      // Check test mode
+      const testModeEnabled = await AsyncStorage.getItem('test_mode');
       if (testModeEnabled === 'enabled') {
+        setTestMode(true);
         const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
         setWalletPublicKey(mockWalletAddress);
-        setTestMode(true);
-        await loadUserTickets(mockWalletAddress);
-        setLoading(false);
+        // Load tickets in background (non-blocking)
+        loadUserTicketsAsync(mockWalletAddress);
         return;
       }
 
-      if (!isConnected) {
+      if (!walletAddress && !isConnected) {
         router.replace('/login');
         return;
       }
+      
       setTestMode(false);
-      const mockPublicKey = new PublicKey('11111111111111111111111111111112');
-      setWalletPublicKey(mockPublicKey);
-      await loadUserTickets(mockPublicKey);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error checking test mode:', error);
-      if (!isConnected) {
-        router.replace('/login');
-        return;
+      
+      // Use stored address or mock for now
+      if (walletAddress) {
+        try {
+          const publicKey = new PublicKey(walletAddress);
+          setWalletPublicKey(publicKey);
+          // Load tickets in background (non-blocking)
+          loadUserTicketsAsync(publicKey);
+        } catch {
+          // If address is invalid, use mock
+          const mockPublicKey = new PublicKey('11111111111111111111111111111112');
+          setWalletPublicKey(mockPublicKey);
+          loadUserTicketsAsync(mockPublicKey);
+        }
+      } else {
+        const mockPublicKey = new PublicKey('11111111111111111111111111111112');
+        setWalletPublicKey(mockPublicKey);
+        loadUserTicketsAsync(mockPublicKey);
       }
+    } catch (error) {
+      console.error('Error initializing screen:', error);
       setLoading(false);
     }
   }
 
-  async function loadUserTickets(publicKey: PublicKey) {
+  // Load tickets asynchronously without blocking UI
+  async function loadUserTicketsAsync(publicKey: PublicKey) {
     try {
       const tickets: Record<string, { used: boolean }> = {};
-      for (const event of EVENTS) {
-        const ticketExistsResult = await ticketExists(publicKey, event.id);
-        if (ticketExistsResult) {
-          const ticketData = await getTicketData(publicKey, event.id);
-          if (ticketData) {
-            tickets[event.id] = { used: ticketData.used };
-          }
-        }
+      
+      // Process tickets in batches to avoid blocking
+      const batchSize = 5;
+      for (let i = 0; i < EVENTS.length; i += batchSize) {
+        const batch = EVENTS.slice(i, i + batchSize);
+        
+        // Process batch in parallel
+        await Promise.all(
+          batch.map(async (event) => {
+            try {
+              const ticketExistsResult = await ticketExists(publicKey, event.id);
+              if (ticketExistsResult) {
+                const ticketData = await getTicketData(publicKey, event.id);
+                if (ticketData) {
+                  tickets[event.id] = { used: ticketData.used };
+                }
+              }
+            } catch (error) {
+              // Silently fail for individual tickets
+              console.warn(`Error checking ticket for ${event.id}:`, error);
+            }
+          })
+        );
+        
+        // Update UI incrementally as we process batches
+        setUserTickets({ ...tickets });
       }
+      
+      // Final update
       setUserTickets(tickets);
     } catch (error) {
       console.error('Error loading user tickets:', error);
@@ -130,8 +181,15 @@ export default function EventsScreen() {
     return { day: '15', month: 'Jul' };
   }
 
-  if (!walletPublicKey && !testMode) {
-    return null;
+  // Show loading only if we're still initializing
+  if (loading && !walletPublicKey && !testMode) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FCFC65" />
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -500,5 +558,11 @@ const styles = StyleSheet.create({
   },
   skeletonCircle: {
     backgroundColor: '#333333',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000000',
   },
 });
