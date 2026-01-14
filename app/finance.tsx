@@ -26,7 +26,7 @@ interface Wallet {
   balance: string;
   change: number;
   color: string;
-  logo: string;
+  logo: any; // Image source
 }
 
 interface Trending {
@@ -37,7 +37,7 @@ interface Trending {
   value: string;
   change: number;
   color: string;
-  logo: string;
+  logo: any; // Image source
 }
 
 export default function FinanceScreen() {
@@ -52,8 +52,8 @@ export default function FinanceScreen() {
       amount: '0.2215',
       balance: '31,426.70',
       change: 2.4,
-      color: '#4A90E2',
-      logo: '👻',
+      color: '#AB9FF2',
+      logo: require('@/assets/phantom.png'),
     },
     {
       id: 'jupiter',
@@ -62,38 +62,8 @@ export default function FinanceScreen() {
       amount: '0.212',
       balance: '32,120.50',
       change: -1.2,
-      color: '#FCFC65',
-      logo: '🪐',
-    },
-    {
-      id: 'ethereum',
-      name: 'Ethereum',
-      symbol: 'ETH',
-      amount: '1.0',
-      balance: '1,571.45',
-      change: 8.75,
-      color: '#627EEA',
-      logo: '💎',
-    },
-    {
-      id: 'solana',
-      name: 'Solana',
-      symbol: 'SOL',
-      amount: '5.5',
-      balance: '825.30',
-      change: 3.2,
-      color: '#9945FF',
-      logo: '☀️',
-    },
-    {
-      id: 'bitcoin',
-      name: 'Bitcoin',
-      symbol: 'BTC',
-      amount: '0.02',
-      balance: '18,565.69',
-      change: 1.85,
-      color: '#F7931A',
-      logo: '₿',
+      color: '#0B3533',
+      logo: require('@/assets/jup.webp'),
     },
   ];
 
@@ -106,7 +76,7 @@ export default function FinanceScreen() {
       value: '1,571.45',
       change: 8.75,
       color: '#627EEA',
-      logo: '💎',
+      logo: require('@/assets/eth.png'),
     },
     {
       id: 'bitcoin',
@@ -116,7 +86,7 @@ export default function FinanceScreen() {
       value: '406.95',
       change: 1.85,
       color: '#F7931A',
-      logo: '₿',
+      logo: require('@/assets/Bitcoin.svg.webp'),
     },
     {
       id: 'solana',
@@ -126,7 +96,7 @@ export default function FinanceScreen() {
       value: '825.30',
       change: 3.2,
       color: '#9945FF',
-      logo: '☀️',
+      logo: require('@/assets/Solana_logo.png'),
     },
   ];
 
@@ -188,7 +158,11 @@ export default function FinanceScreen() {
                 <View style={styles.walletCardHeader}>
                   <Text style={styles.walletName}>{wallet.name}</Text>
                   <View style={styles.walletLogo}>
-                    <Text style={styles.walletLogoText}>{wallet.logo}</Text>
+                    {typeof wallet.logo === 'string' ? (
+                      <Text style={styles.walletLogoText}>{wallet.logo}</Text>
+                    ) : (
+                      <Image source={wallet.logo} style={styles.walletLogoImage} resizeMode="contain" />
+                    )}
                   </View>
                 </View>
                 <Text style={styles.walletSymbol}>{wallet.symbol} {wallet.amount}</Text>
@@ -217,7 +191,11 @@ export default function FinanceScreen() {
           {trending.map((item) => (
             <TouchableOpacity key={item.id} style={styles.trendingItem}>
               <View style={[styles.trendingIcon, { backgroundColor: item.color }]}>
-                <Text style={styles.trendingIconText}>{item.logo}</Text>
+                {typeof item.logo === 'string' ? (
+                  <Text style={styles.trendingIconText}>{item.logo}</Text>
+                ) : (
+                  <Image source={item.logo} style={styles.trendingIconImage} resizeMode="contain" />
+                )}
               </View>
               <View style={styles.trendingInfo}>
                 <Text style={styles.trendingName}>{item.name}</Text>
@@ -332,9 +310,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   walletLogoText: {
     fontSize: 24,
+  },
+  walletLogoImage: {
+    width: 40,
+    height: 40,
   },
   walletSymbol: {
     fontSize: 12,
@@ -370,13 +353,18 @@ const styles = StyleSheet.create({
   trendingIcon: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
   },
   trendingIconText: {
     fontSize: 24,
+  },
+  trendingIconImage: {
+    width: 32,
+    height: 32,
   },
   trendingInfo: {
     flex: 1,
