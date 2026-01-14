@@ -10,4 +10,10 @@ config.resolver.blockList = [
   /node_modules\/.*\/node_modules\/react-native\/.*/,
 ];
 
+// Set custom port
+config.server = {
+  ...config.server,
+  port: 8082,
+};
+
 module.exports = config;

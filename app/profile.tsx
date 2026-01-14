@@ -13,15 +13,58 @@ import {
   ScrollView,
   Switch,
   Image,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useWallet } from '@lazorkit/wallet-mobile-adapter';
+import { clearWalletData } from '@/lib/secure-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const walletHook = useWallet() as any;
+  const { disconnect } = walletHook;
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  async function handleLogout() {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout? You will need to authenticate again to access your wallet.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Clear secure wallet storage
+              await clearWalletData();
+              
+              // Disconnect wallet from SDK
+              if (disconnect) {
+                await disconnect();
+              }
+              
+              // Clear test mode if enabled
+              await AsyncStorage.removeItem('test_mode');
+              
+              // Redirect to login
+              router.replace('/login');
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -211,7 +254,7 @@ export default function ProfileScreen() {
 
           <TouchableOpacity 
             style={styles.settingRow}
-            onPress={() => router.push('/logout')}
+            onPress={handleLogout}
           >
             <View style={styles.settingLeft}>
               <Ionicons name="log-out-outline" size={24} color="#FCFC65" />

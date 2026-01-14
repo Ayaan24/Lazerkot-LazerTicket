@@ -19,6 +19,7 @@ import { useWallet } from '@lazorkit/wallet-mobile-adapter';
 import { LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
 import * as LocalAuthentication from 'expo-local-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storeWalletInfo } from '@/lib/secure-storage';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
@@ -63,8 +64,24 @@ export default function LoginScreen() {
     try {
       await connect({
         redirectUrl: `${LAZORKIT_REDIRECT_URL}?screen=events`,
-        onSuccess: (walletInfo) => {
+        onSuccess: async (walletInfo) => {
           console.log('Connected successfully:', walletInfo.smartWallet);
+          
+          // Store wallet credentials securely
+          try {
+            await storeWalletInfo({
+              credentialId: walletInfo.credentialId,
+              smartWallet: walletInfo.smartWallet,
+              passkeyPubkey: walletInfo.passkeyPubkey,
+              walletDevice: walletInfo.walletDevice,
+              platform: walletInfo.platform,
+            });
+            console.log('Wallet credentials stored securely');
+          } catch (storageError) {
+            console.error('Error storing wallet credentials:', storageError);
+            // Continue even if storage fails - wallet is still connected
+          }
+          
           setLoading(false);
           router.replace('/events');
         },

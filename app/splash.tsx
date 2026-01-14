@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { View, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getWalletAddress } from '@/lib/secure-storage';
 
 const ONBOARDING_STORAGE_KEY = '@onboarding_completed';
 
@@ -22,17 +23,20 @@ export default function SplashScreen() {
       // Wait 2 seconds for splash screen
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Reset onboarding to show it again (remove this line to restore normal behavior)
-      await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
-      
       const onboardingCompleted = await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
       
-      if (onboardingCompleted === 'true') {
-        // Check if wallet exists
-        const { restoreWallet } = await import('@/lib/lazorkit');
-        const wallet = await restoreWallet();
-        router.replace(wallet ? '/events' : '/login');
+      // Check if wallet credentials are stored securely
+      const walletAddress = await getWalletAddress();
+      
+      if (onboardingCompleted === 'true' && walletAddress) {
+        // Wallet exists - FaceIdGuard will handle Face ID authentication
+        // and redirect to appropriate screen
+        router.replace('/events');
+      } else if (onboardingCompleted === 'true') {
+        // Onboarding done but no wallet - go to login
+        router.replace('/login');
       } else {
+        // First time - show onboarding
         router.replace('/onboarding');
       }
     } catch (error) {

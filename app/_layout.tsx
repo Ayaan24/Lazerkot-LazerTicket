@@ -12,6 +12,7 @@ global.Buffer = global.Buffer || Buffer;
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LazorKitProvider } from '@lazorkit/wallet-mobile-adapter';
+import FaceIdGuard from '@/components/FaceIdGuard';
 
 // LazorKit configuration for Devnet
 const LAZORKIT_CONFIG = {
@@ -30,14 +31,15 @@ export default function RootLayout() {
       portalUrl={LAZORKIT_CONFIG.portalUrl}
       configPaymaster={LAZORKIT_CONFIG.configPaymaster}
     >
-      <StatusBar style="auto" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'none',
-          animationTypeForReplace: 'push',
-        }}
-      >
+      <FaceIdGuard>
+        <StatusBar style="auto" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            animation: 'none',
+            animationTypeForReplace: 'push',
+          }}
+        >
         <Stack.Screen 
           name="splash" 
           options={{ 
@@ -112,7 +114,8 @@ export default function RootLayout() {
             headerShown: false,
           }} 
         />
-      </Stack>
+        </Stack>
+      </FaceIdGuard>
     </LazorKitProvider>
   );
 }
