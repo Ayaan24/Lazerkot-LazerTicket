@@ -18,6 +18,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
 import { signWithPasskey, signAndSendTransactionWithPasskey, LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
+import { getWalletAddress } from '@/lib/secure-storage';
 import {
   getTicketData,
   markTicketUsedInstruction,
@@ -36,47 +37,52 @@ export default function EntryScreen() {
   const eventId = (params.eventId as string) || 'summer-festival-2024';
   const event = getEventById(eventId) || getEventById('summer-festival-2024')!;
   
-  const { isConnected, signMessage, signAndSendTransaction } = useWallet();
+  const walletHook = useWallet() as any;
+  const { isConnected, signMessage, signAndSendTransaction } = walletHook || {};
+  const wallet = walletHook?.wallet;
   const [walletPublicKey, setWalletPublicKey] = useState<PublicKey | null>(null);
   const [ticketData, setTicketData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
   const [denied, setDenied] = useState(false);
-  const [testMode, setTestMode] = useState(false);
 
   useEffect(() => {
-    checkTestMode();
-  }, [isConnected]);
+    initializeWallet();
+  }, []);
 
-  async function checkTestMode() {
+  async function initializeWallet() {
     try {
-      const testModeEnabled = await AsyncStorage.getItem('test_mode');
-      
-      if (testModeEnabled === 'enabled') {
-        const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
-        setWalletPublicKey(mockWalletAddress);
-        setTestMode(true);
-        await loadTicketTestMode(mockWalletAddress);
-        return;
-      }
+      // Get wallet address from SDK or storage
+      const { getWalletAddress } = await import('@/lib/secure-storage');
+      const storedAddress = await getWalletAddress();
+      const walletAddress = wallet?.smartWallet || storedAddress;
 
-      if (!isConnected) {
+      if (!walletAddress && !isConnected) {
         router.replace('/login');
         return;
       }
 
-      const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
-      setWalletPublicKey(mockWalletAddress);
-      setTestMode(false);
-      await loadTicketTestMode(mockWalletAddress);
+      // Use real wallet address from LazorKit
+      if (walletAddress) {
+        try {
+          const publicKey = new PublicKey(walletAddress);
+          setWalletPublicKey(publicKey);
+          await loadTicket(publicKey);
+        } catch (error) {
+          console.error('Error parsing wallet address:', error);
+          router.replace('/login');
+        }
+      } else {
+        router.replace('/login');
+      }
     } catch (error) {
-      console.error('Error checking test mode:', error);
+      console.error('Error initializing wallet:', error);
       router.replace('/login');
     }
   }
 
-  async function loadTicketTestMode(publicKey: PublicKey) {
+  async function loadTicket(publicKey: PublicKey) {
     try {
       const data = await getTicketData(publicKey, event.id);
       if (!data) {
@@ -107,41 +113,6 @@ export default function EntryScreen() {
     setVerified(false);
 
     try {
-      if (testMode) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        const onChainTicket = await getTicketData(walletPublicKey, event.id);
-
-        if (!onChainTicket) {
-          throw new Error('Ticket not found on-chain');
-        }
-
-        if (onChainTicket.used) {
-          throw new Error('Ticket has already been used');
-        }
-
-        await updateTicketUsed(walletPublicKey, event.id, true);
-        
-        setVerified(true);
-        setTicketData({
-          ...ticketData,
-          used: true,
-        });
-
-        Alert.alert(
-          'Entry Granted! (Test Mode)',
-          'Your ticket has been verified and marked as used. Welcome to the event!\nNote: This is a test verification.',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.replace('/my-ticket'),
-            },
-          ]
-        );
-        setVerifying(false);
-        return;
-      }
-
       if (!signMessage || !signAndSendTransaction) {
         Alert.alert(
           'Authentication Required',

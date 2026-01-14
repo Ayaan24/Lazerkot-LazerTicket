@@ -18,6 +18,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
 import { getTicketData } from '@/lib/solana';
+import { getWalletAddress } from '@/lib/secure-storage';
 import { PublicKey } from '@solana/web3.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '@/components/Header';
@@ -39,42 +40,49 @@ export default function MyTicketScreen() {
   const params = useLocalSearchParams();
   const selectedEventId = params.eventId as string | undefined;
   
-  const { isConnected } = useWallet();
+  const walletHook = useWallet() as any;
+  const { isConnected } = walletHook || {};
+  const wallet = walletHook?.wallet;
   const [walletPublicKey, setWalletPublicKey] = useState<PublicKey | null>(null);
   const [allTickets, setAllTickets] = useState<TicketWithEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [testMode, setTestMode] = useState(false);
   const [filter, setFilter] = useState<'used' | 'unused'>('unused');
   const [selectedTicket, setSelectedTicket] = useState<TicketWithEvent | null>(null);
 
   useEffect(() => {
-    checkTestMode();
-  }, [isConnected]);
+    initializeWallet();
+  }, []);
 
-  async function checkTestMode() {
+  async function initializeWallet() {
     try {
-      const testModeEnabled = await AsyncStorage.getItem('test_mode');
-      
-      if (testModeEnabled === 'enabled') {
-        const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
-        setWalletPublicKey(mockWalletAddress);
-        setTestMode(true);
-        await loadAllTickets(mockWalletAddress);
-        return;
-      }
+      // Get wallet address from SDK or storage
+      const { getWalletAddress } = await import('@/lib/secure-storage');
+      const storedAddress = await getWalletAddress();
+      const walletAddress = wallet?.smartWallet || storedAddress;
 
-      if (!isConnected) {
+      if (!walletAddress && !isConnected) {
         router.replace('/login');
         return;
       }
 
-      const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
-      setWalletPublicKey(mockWalletAddress);
-      setTestMode(false);
-      await loadAllTickets(mockWalletAddress);
+      // Use real wallet address from LazorKit
+      if (walletAddress) {
+        try {
+          const publicKey = new PublicKey(walletAddress);
+          setWalletPublicKey(publicKey);
+          await loadAllTickets(publicKey);
+        } catch (error) {
+          console.error('Error parsing wallet address:', error);
+          router.replace('/login');
+        }
+      } else {
+        router.replace('/login');
+      }
     } catch (error) {
-      console.error('Error checking test mode:', error);
+      console.error('Error initializing wallet:', error);
       router.replace('/login');
+    } finally {
+      setLoading(false);
     }
   }
 

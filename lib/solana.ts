@@ -17,6 +17,7 @@ import {
   createAssociatedTokenAccountInstruction,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAccount,
 } from '@solana/spl-token';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -376,20 +377,43 @@ export async function markTicketUsedInstruction(
 export async function getUSDCBalance(wallet: PublicKey): Promise<number> {
   try {
     const usdcMint = new PublicKey(USDC_MINT_ADDRESS);
+    
+    // Validate wallet is a valid on-curve public key
+    if (!PublicKey.isOnCurve(wallet.toBuffer())) {
+      console.warn('Wallet address is not on-curve, returning 0 balance');
+      return 0;
+    }
+    
     const tokenAccount = await getAssociatedTokenAddress(
       usdcMint,
       wallet
     );
 
-    const accountInfo = await connection.getAccountInfo(tokenAccount);
-    if (!accountInfo) return 0;
-
-    // Parse token account balance (6 decimals for USDC)
-    // In production, use proper SPL token account parsing
-    const balance = 0; // Placeholder - would parse from account data
-    return balance / 1_000_000; // Convert to USDC
-  } catch (error) {
-    console.error('Error getting USDC balance:', error);
+    try {
+      // Use SPL Token library to get account info
+      const account = await getAccount(connection, tokenAccount);
+      // Convert from smallest unit (6 decimals for USDC) to USDC
+      return Number(account.amount) / 1_000_000;
+    } catch (accountError: any) {
+      // Account doesn't exist yet or other errors
+      if (accountError?.message?.includes('InvalidAccountData') || 
+          accountError?.message?.includes('could not find account') ||
+          accountError?.message?.includes('TokenOwnerOffCurveError') ||
+          accountError?.name === 'TokenOwnerOffCurveError') {
+        return 0;
+      }
+      // Log but don't throw - return 0 for any other errors
+      console.warn('Error getting USDC account:', accountError?.message || accountError);
+      return 0;
+    }
+  } catch (error: any) {
+    // Handle TokenOwnerOffCurveError or other errors gracefully
+    if (error?.name === 'TokenOwnerOffCurveError' || 
+        error?.message?.includes('TokenOwnerOffCurveError')) {
+      console.warn('TokenOwnerOffCurveError: Wallet may not support token accounts yet');
+      return 0;
+    }
+    console.warn('Error getting USDC balance:', error?.message || error);
     return 0;
   }
 }

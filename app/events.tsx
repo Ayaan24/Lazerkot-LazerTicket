@@ -33,7 +33,6 @@ export default function EventsScreen() {
   
   const [walletPublicKey, setWalletPublicKey] = useState<PublicKey | null>(null);
   const [loading, setLoading] = useState(true);
-  const [testMode, setTestMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All Event');
   const [searchQuery, setSearchQuery] = useState('');
   const [userTickets, setUserTickets] = useState<Record<string, { used: boolean }>>({});
@@ -58,41 +57,26 @@ export default function EventsScreen() {
         walletAddress = storedAddress;
       }
       
-      // Check test mode
-      const testModeEnabled = await AsyncStorage.getItem('test_mode');
-      if (testModeEnabled === 'enabled') {
-        setTestMode(true);
-        const mockWalletAddress = new PublicKey('11111111111111111111111111111112');
-        setWalletPublicKey(mockWalletAddress);
-        // Load tickets in background (non-blocking)
-        loadUserTicketsAsync(mockWalletAddress);
-        return;
-      }
-
       if (!walletAddress && !isConnected) {
         router.replace('/login');
         return;
       }
       
-      setTestMode(false);
-      
-      // Use stored address or mock for now
+      // Use real wallet address from LazorKit
       if (walletAddress) {
         try {
           const publicKey = new PublicKey(walletAddress);
           setWalletPublicKey(publicKey);
           // Load tickets in background (non-blocking)
           loadUserTicketsAsync(publicKey);
-        } catch {
-          // If address is invalid, use mock
-          const mockPublicKey = new PublicKey('11111111111111111111111111111112');
-          setWalletPublicKey(mockPublicKey);
-          loadUserTicketsAsync(mockPublicKey);
+        } catch (error) {
+          console.error('Error parsing wallet address:', error);
+          // Invalid address, redirect to login
+          router.replace('/login');
         }
       } else {
-        const mockPublicKey = new PublicKey('11111111111111111111111111111112');
-        setWalletPublicKey(mockPublicKey);
-        loadUserTicketsAsync(mockPublicKey);
+        // No wallet available, redirect to login
+        router.replace('/login');
       }
     } catch (error) {
       console.error('Error initializing screen:', error);
@@ -182,7 +166,7 @@ export default function EventsScreen() {
   }
 
   // Show loading only if we're still initializing
-  if (loading && !walletPublicKey && !testMode) {
+  if (loading && !walletPublicKey) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>

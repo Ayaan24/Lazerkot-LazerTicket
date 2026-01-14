@@ -51,9 +51,6 @@ export default function ProfileScreen() {
                 await disconnect();
               }
               
-              // Clear test mode if enabled
-              await AsyncStorage.removeItem('test_mode');
-              
               // Redirect to login
               router.replace('/login');
             } catch (error) {

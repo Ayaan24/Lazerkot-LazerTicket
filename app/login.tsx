@@ -173,26 +173,6 @@ export default function LoginScreen() {
             </Text>
           </View>
         )}
-
-        {/* Test Mode Button */}
-        <TouchableOpacity
-          style={styles.testButton}
-          onPress={async () => {
-            try {
-              await AsyncStorage.setItem('test_mode', 'enabled');
-              router.replace('/events');
-            } catch (error) {
-              console.error('Error enabling test mode:', error);
-              router.replace('/events');
-            }
-          }}
-        >
-          <View style={styles.testButtonContent}>
-            <Ionicons name="rocket" size={20} color="#FCFC65" style={{ marginRight: 8 }} />
-            <Text style={styles.testButtonText}>Test Mode</Text>
-          </View>
-          <Text style={styles.testButtonSubtext}>Skip authentication for testing</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -295,32 +275,6 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
     flex: 1,
     lineHeight: 18,
-  },
-  testButton: {
-    marginTop: 24,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#FCFC65',
-    borderStyle: 'dashed',
-    width: '100%',
-    alignItems: 'center',
-    backgroundColor: '#1A1A1A',
-  },
-  testButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  testButtonText: {
-    color: '#FCFC65',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  testButtonSubtext: {
-    color: '#999999',
-    fontSize: 12,
   },
   loadingText: {
     marginTop: 16,
