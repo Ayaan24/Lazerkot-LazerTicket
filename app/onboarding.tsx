@@ -44,7 +44,7 @@ export default function OnboardingScreen() {
   ];
 
   async function handleSkip() {
-    await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+    // Don't save onboarding completion - always show it
     router.replace('/login');
   }
 
@@ -57,7 +57,7 @@ export default function OnboardingScreen() {
         animated: true,
       });
     } else {
-      await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
+      // Don't save onboarding completion - always show it
       router.replace('/login');
     }
   }

@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   featuresContainer: {
-    width: '100%',
+    width: '80%',
     marginBottom: 40,
     gap: 16,
   },
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 32,
     borderRadius: 16,
-    width: '100%',
+    width: '90%',
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
