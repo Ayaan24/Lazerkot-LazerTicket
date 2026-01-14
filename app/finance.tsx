@@ -254,8 +254,8 @@ export default function FinanceScreen() {
       amount: solBalance.toFixed(4),
       balance: usdBalance,
       change: 0,
-      color: '#9945FF',
-      logo: require('@/assets/Solana_logo.png'),
+      color: '#FFFFFF',
+      logo: require('@/assets/logo.png'),
     },
   ];
 
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
   walletName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#000000',
     opacity: 0.9,
   },
   walletLogo: {
@@ -699,14 +699,14 @@ const styles = StyleSheet.create({
   },
   walletSymbol: {
     fontSize: 12,
-    color: '#FFFFFF',
+    color: '#000000',
     opacity: 0.7,
     marginBottom: 8,
   },
   walletBalance: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#000000',
     marginBottom: 8,
   },
   walletChange: {
