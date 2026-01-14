@@ -56,6 +56,19 @@ export default function Footer() {
       
       <TouchableOpacity 
         style={styles.footerButton}
+        onPress={() => router.push('/finance')}
+      >
+        {isActive('/finance') ? (
+          <View style={styles.footerIconActive}>
+            <Ionicons name="wallet" size={24} color="#000000" />
+          </View>
+        ) : (
+          <Ionicons name="wallet-outline" size={24} color="#000000" />
+        )}
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={styles.footerButton}
         onPress={() => router.push('/profile')}
       >
         {isActive('/profile') ? (

@@ -105,6 +105,13 @@ export default function RootLayout() {
             headerShown: false,
           }} 
         />
+        <Stack.Screen 
+          name="finance" 
+          options={{ 
+            title: 'Finance',
+            headerShown: false,
+          }} 
+        />
       </Stack>
     </LazorKitProvider>
   );
