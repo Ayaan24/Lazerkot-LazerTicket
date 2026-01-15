@@ -50,6 +50,18 @@ export default function LoginScreen() {
     }
   }
 
+  /**
+   * Handle sign in with Face ID
+   * 
+   * This function:
+   * 1. Checks if biometric authentication is available
+   * 2. Calls LazorKit SDK connect() method
+   * 3. Opens LazorKit portal for passkey creation/login
+   * 4. Stores wallet credentials securely on success
+   * 5. Navigates to events screen
+   * 
+   * @see https://docs.lazorkit.com for connect() API documentation
+   */
   async function handleSignIn() {
     if (!biometricAvailable) {
       Alert.alert(
@@ -62,19 +74,25 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
+      // Connect to LazorKit wallet via portal
+      // This will open the LazorKit portal in a browser/webview
+      // User authenticates with Face ID, passkey is created/restored
       await connect({
+        // Deep link URL to return to app after authentication
+        // Must match URL scheme in app.json
         redirectUrl: `${LAZORKIT_REDIRECT_URL}?screen=events`,
         onSuccess: async (walletInfo) => {
           console.log('Connected successfully:', walletInfo.smartWallet);
           
-          // Store wallet credentials securely
+          // Store wallet credentials securely in device secure storage
+          // This enables wallet restoration on app restart
           try {
             await storeWalletInfo({
-              credentialId: walletInfo.credentialId,
-              smartWallet: walletInfo.smartWallet,
-              passkeyPubkey: walletInfo.passkeyPubkey,
-              walletDevice: walletInfo.walletDevice,
-              platform: walletInfo.platform,
+              credentialId: walletInfo.credentialId,      // WebAuthn credential ID
+              smartWallet: walletInfo.smartWallet,        // Solana wallet address (PDA)
+              passkeyPubkey: walletInfo.passkeyPubkey,    // Passkey public key bytes
+              walletDevice: walletInfo.walletDevice,      // Device PDA address
+              platform: walletInfo.platform,              // 'ios' or 'android'
             });
             console.log('Wallet credentials stored securely');
           } catch (storageError) {

@@ -1,262 +1,375 @@
-# LazorKit Ticket Demo
+# LazorKit Event Ticketing App
 
-A production-quality demo app demonstrating walletless, biometric-first event ticket purchase and entry using LazorKit, Solana, and Face ID.
+> A production-ready React Native (Expo) demo app showcasing passkey-native Solana wallet integration with gasless transactions and biometric authentication.
 
-## Overview
+[![React Native](https://img.shields.io/badge/React%20Native-0.81.5-blue.svg)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-~54.0.0-black.svg)](https://expo.dev/)
+[![LazorKit](https://img.shields.io/badge/LazorKit-1.0.0-yellow.svg)](https://lazorkit.com)
+[![Solana](https://img.shields.io/badge/Solana-Devnet-purple.svg)](https://solana.com)
 
-This app shows how to build a mobile experience where users can:
-- **Sign in with Face ID** - No passwords, no seed phrases
-- **Buy event tickets with USDC** - Gasless transactions via Paymaster
-- **Enter events with Face ID** - Biometric verification replaces QR codes
-- **No wallet UI needed** - Smart wallet managed automatically
+## 📱 Project Overview
 
-## Key Features
+This app demonstrates how to build a **walletless, biometric-first** event ticketing experience on Solana using LazorKit's passkey-native wallet technology. Users can:
 
-✅ **Passkey-Based Authentication**: Face ID creates and controls a smart wallet  
-✅ **Gasless Transactions**: Paymaster sponsors all transaction fees  
-✅ **On-Chain Tickets**: Tickets stored as Program Derived Addresses (PDAs)  
-✅ **One-Time Use**: Tickets can only be used once for entry  
-✅ **Non-Transferable**: Tickets are bound to the wallet owner  
-✅ **No Seed Phrases**: Users never see or manage private keys  
+- 🔐 **Sign in with Face ID** - No passwords, no seed phrases
+- 💰 **Buy tickets with USDC** - Gasless transactions via Paymaster
+- 🎫 **Own NFT tickets** - Stored on-chain as Program Derived Addresses (PDAs)
+- 🚪 **Enter events with Face ID** - Biometric verification replaces QR codes
 
-## Tech Stack
+### Key Features
 
-- **React Native** with Expo (~50.0.0)
-- **TypeScript** for type safety
-- **Expo Router** for navigation
-- **LazorKit SDK** for passkey and smart wallet management
-- **Solana Web3.js** for blockchain interactions
-- **expo-local-authentication** for Face ID/Touch ID
-- **Solana Devnet** for testing
+✅ **Passkey-Based Authentication** - Face ID creates and controls a smart wallet  
+✅ **Gasless Transactions** - Paymaster sponsors all transaction fees  
+✅ **On-Chain Tickets** - Tickets stored as PDAs on Solana  
+✅ **One-Time Use** - Tickets can only be used once for entry  
+✅ **Non-Transferable** - Tickets are cryptographically bound to wallet owner  
+✅ **No Seed Phrases** - Users never see or manage private keys  
 
-## Project Structure
+---
 
-```
-/app
-  ├── _layout.tsx         # Root navigation layout
-  ├── index.tsx           # Entry point (redirects to login/events)
-  ├── login.tsx           # Face ID authentication screen
-  ├── events.tsx          # Event listing screen
-  ├── buy-ticket.tsx      # Ticket purchase screen
-  ├── my-ticket.tsx       # Ticket details screen
-  └── entry.tsx           # Entry verification screen
-
-/lib
-  ├── lazorkit.ts         # LazorKit integration (passkeys, wallets, sessions)
-  ├── solana.ts           # Solana helpers (PDAs, USDC, tickets)
-  └── paymaster.ts        # Paymaster integration (gasless transactions)
-
-/tutorials
-  ├── 01-mobile-passkey-login.md      # How Face ID creates passkeys
-  ├── 02-gasless-ticket-purchase.md   # How gasless USDC purchases work
-  └── 03-faceid-event-entry.md        # How Face ID proves entry
-```
-
-## How It Works
-
-### 1. Face ID Creates a Passkey
-
-When users sign in with Face ID:
-- Device authenticates with biometrics
-- LazorKit creates a WebAuthn passkey credential
-- A smart wallet (PDA) is derived from the passkey
-- No seed phrase needed - wallet is controlled by passkey
-
-See [Mobile Passkey Login](./tutorials/01-mobile-passkey-login.md) for details.
-
-### 2. Passkey Controls a Smart Wallet
-
-The smart wallet is a Program Derived Address (PDA) on Solana:
-- Wallet address is derived from passkey credential ID
-- Only the passkey can authorize transactions
-- Private key never leaves device secure storage
-- Wallet is non-custodial but user-friendly
-
-### 3. Gasless USDC Ticket Purchase
-
-When users buy a ticket:
-- USDC transfers from user to organizer (user pays ticket price)
-- Ticket PDA is created on-chain (stored as account data)
-- Paymaster sponsors transaction fees (user pays $0 in gas)
-- Transaction is signed with passkey (Face ID required)
-
-See [Gasless Ticket Purchase](./tutorials/02-gasless-ticket-purchase.md) for details.
-
-### 4. Face ID Proves Event Entry
-
-When users enter an event:
-- Face ID authenticates user identity
-- Passkey signs a verification challenge
-- On-chain ticket ownership is verified
-- Ticket is marked as used (one-time use enforced)
-- Entry granted or denied based on verification
-
-See [Face ID Event Entry](./tutorials/03-faceid-event-entry.md) for details.
-
-## Running the App Locally
+## 🚀 Quick Start Guide
 
 ### Prerequisites
 
-- Node.js 18+ installed
-- iOS Simulator (for iOS) or Android Emulator (for Android)
-- Expo CLI installed globally: `npm install -g expo-cli`
-- npm registry access (packages will be installed from npm)
+- **Node.js** 18+ installed
+- **npm** or **yarn** package manager
+- **iOS Simulator** (for iOS) or **Android Emulator** (for Android)
+- **Expo CLI** (optional, but recommended): `npm install -g expo-cli`
 
 ### Installation
 
-1. **Clone and install dependencies:**
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd lazerkit
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start the Expo development server:**
+   ```bash
+   npm start
+   ```
+
+4. **Run on your device/simulator:**
+   - **iOS**: Press `i` in terminal or scan QR code with Camera app
+   - **Android**: Press `a` in terminal or scan QR code with Expo Go app
+   - **Web**: Press `w` in terminal
+
+### First Run
+
+1. **Start the app** - It will show the onboarding screen
+2. **Sign in with Face ID** - Creates passkey and smart wallet automatically
+3. **View Events** - Browse available events
+4. **Buy Ticket** - Purchase ticket with Face ID (50 USDC, gasless)
+5. **View Ticket** - Check ticket status and details
+6. **Enter Event** - Verify entry with Face ID, mark ticket as used
+
+---
+
+## 📦 SDK Installation & Configuration
+
+### 1. Install LazorKit SDK
+
+The LazorKit React Native SDK is already installed. To add it to a new project:
 
 ```bash
-cd lazerkit
-npm install
+npm install @lazorkit/wallet-mobile-adapter
 ```
 
-2. **Start the Expo development server:**
+### 2. Install Required Polyfills
+
+React Native requires polyfills for Solana libraries:
 
 ```bash
-npm start
-# or
-expo start
+npm install react-native-get-random-values react-native-url-polyfill buffer
 ```
 
-3. **Run on device/simulator:**
+### 3. Configure Polyfills
 
-- **iOS**: Press `i` in terminal or scan QR code with Camera app
-- **Android**: Press `a` in terminal or scan QR code with Expo Go app
+Add these imports at the **very top** of your entry file (`app/_layout.tsx`):
 
-### iOS Simulator Setup
+```typescript
+// Must be at the very top, before any other imports
+import 'react-native-get-random-values';
+import 'react-native-url-polyfill/auto';
+import { Buffer } from 'buffer';
+global.Buffer = global.Buffer || Buffer;
+```
+
+### 4. Setup LazorKitProvider
+
+Wrap your app with `LazorKitProvider` in `app/_layout.tsx`:
+
+```typescript
+import { LazorKitProvider } from '@lazorkit/wallet-mobile-adapter';
+
+export default function RootLayout() {
+  return (
+    <LazorKitProvider
+      rpcUrl="https://api.devnet.solana.com"
+      portalUrl="https://portal.lazor.sh"
+      configPaymaster={{
+        paymasterUrl: 'https://kora.devnet.lazorkit.com',
+        // apiKey: 'YOUR_API_KEY' // Optional
+      }}
+    >
+      {/* Your app components */}
+    </LazorKitProvider>
+  );
+}
+```
+
+### 5. Configure URL Scheme
+
+Update `app.json` to match your redirect URL:
+
+```json
+{
+  "expo": {
+    "scheme": "lazorkit-ticket",
+    "ios": {
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["lazorkit-ticket"]
+          }
+        ]
+      }
+    },
+    "android": {
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "lazorkit-ticket"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+## 🔧 Environment Setup
+
+### Solana Network Configuration
+
+The app uses **Solana Devnet** by default. To change networks, update `app/_layout.tsx`:
+
+```typescript
+const LAZORKIT_CONFIG = {
+  rpcUrl: 'https://api.devnet.solana.com', // Change to mainnet-beta for production
+  portalUrl: 'https://portal.lazor.sh',
+  configPaymaster: {
+    paymasterUrl: 'https://kora.devnet.lazorkit.com',
+  },
+};
+```
+
+### USDC Mint Address
+
+Update the USDC mint address in `lib/solana.ts`:
+
+```typescript
+// Devnet USDC
+const USDC_MINT_ADDRESS = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU';
+
+// Mainnet USDC
+// const USDC_MINT_ADDRESS = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+```
+
+### Organizer Wallet Address
+
+Update the event organizer wallet address in `app/buy-ticket.tsx`:
+
+```typescript
+const organizerWallet = new PublicKey('BZkqZhJSsuZDJHHvXgizsj46oScPFahBcKVGPV8RA4nk');
+```
+
+---
+
+## 📁 Project Structure
+
+```
+lazerkit/
+├── app/                      # Expo Router screens
+│   ├── _layout.tsx          # Root layout with LazorKitProvider
+│   ├── splash.tsx           # Initial loading screen
+│   ├── onboarding.tsx       # Onboarding flow
+│   ├── login.tsx            # Face ID authentication
+│   ├── events.tsx           # Event listing
+│   ├── buy-ticket.tsx       # Ticket purchase with Face ID
+│   ├── my-ticket.tsx        # Ticket details
+│   └── entry.tsx            # Event entry verification
+│
+├── components/              # Reusable components
+│   ├── FaceIdGuard.tsx      # App-wide Face ID authentication guard
+│   ├── Header.tsx           # Navigation header
+│   └── Footer.tsx           # Bottom navigation
+│
+├── lib/                     # Core libraries
+│   ├── lazorkit.ts         # LazorKit SDK integration helpers
+│   ├── solana.ts           # Solana blockchain helpers
+│   ├── secure-storage.ts   # Secure credential storage
+│   └── biometric-auth.ts   # Biometric authentication helpers
+│
+├── tutorials/               # Step-by-step tutorials
+│   ├── 01-mobile-passkey-login.md
+│   ├── 02-gasless-ticket-purchase.md
+│   └── 03-faceid-event-entry.md
+│
+├── package.json            # Dependencies
+├── app.json                # Expo configuration
+└── README.md               # This file
+```
+
+---
+
+## 📚 Step-by-Step Tutorials
+
+### Tutorial 1: How to Create a Passkey-Based Wallet
+
+Learn how Face ID creates a passkey and controls a smart wallet.
+
+**📖 [Read Tutorial →](./tutorials/01-mobile-passkey-login.md)**
+
+**Key Steps:**
+1. Check biometric availability
+2. Trigger Face ID authentication
+3. Create WebAuthn passkey credential
+4. Derive smart wallet (PDA) from passkey
+5. Store credentials securely
+
+### Tutorial 2: How to Trigger a Gasless Transaction
+
+Learn how to execute gasless USDC transfers using LazorKit Paymaster.
+
+**📖 [Read Tutorial →](./tutorials/02-gasless-ticket-purchase.md)**
+
+**Key Steps:**
+1. Create transaction instructions
+2. Build Solana transaction
+3. Request Paymaster sponsorship
+4. Sign transaction with passkey
+5. Submit and confirm transaction
+
+### Tutorial 3: How to Persist Session Across Devices
+
+Learn how wallet sessions are managed and restored.
+
+**📖 [Read Tutorial →](./tutorials/03-faceid-event-entry.md)**
+
+**Key Steps:**
+1. Store wallet credentials securely
+2. Restore wallet on app launch
+3. Re-authenticate with Face ID
+4. Maintain session state
+
+---
+
+## 💻 Code Examples
+
+### Connect Wallet with Face ID
+
+```typescript
+import { useWallet } from '@lazorkit/wallet-mobile-adapter';
+
+const { connect } = useWallet();
+
+await connect({
+  redirectUrl: 'lazorkit-ticket://callback?screen=events',
+  onSuccess: (walletInfo) => {
+    console.log('Wallet address:', walletInfo.smartWallet);
+    // Store credentials securely
+  },
+  onFail: (error) => {
+    console.error('Connection failed:', error);
+  },
+});
+```
+
+### Sign and Send Gasless Transaction
+
+```typescript
+import { useWallet } from '@lazorkit/wallet-mobile-adapter';
+import { SystemProgram, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+
+const { signAndSendTransaction, wallet } = useWallet();
+
+const instruction = SystemProgram.transfer({
+  fromPubkey: new PublicKey(wallet.smartWallet),
+  toPubkey: new PublicKey('RECIPIENT_ADDRESS'),
+  lamports: 0.01 * LAMPORTS_PER_SOL,
+});
+
+const signature = await signAndSendTransaction(
+  {
+    instructions: [instruction],
+    transactionOptions: {
+      feeToken: 'USDC', // Gasless transaction
+      clusterSimulation: 'devnet',
+    },
+  },
+  {
+    redirectUrl: 'lazorkit-ticket://callback',
+    onSuccess: (sig) => console.log('Transaction:', sig),
+    onFail: (err) => console.error('Failed:', err),
+  }
+);
+```
+
+### Sign Message with Passkey
+
+```typescript
+import { useWallet } from '@lazorkit/wallet-mobile-adapter';
+
+const { signMessage } = useWallet();
+
+const result = await signMessage('Hello, LazorKit!', {
+  redirectUrl: 'lazorkit-ticket://callback',
+  onSuccess: (res) => console.log('Signature:', res.signature),
+  onFail: (err) => console.error('Failed:', err),
+});
+```
+
+---
+
+## 🧪 Testing
+
+### iOS Simulator
 
 1. Open Xcode Simulator
-2. Run `expo start --ios`
-3. Face ID can be simulated: Features → Face ID → Enrolled
+2. Enable Face ID: **Features → Face ID → Enrolled**
+3. Run: `npm run ios`
 
-### Android Emulator Setup
+### Android Emulator
 
 1. Open Android Studio Emulator
-2. Run `expo start --android`
-3. Fingerprint can be simulated via Settings → Security
+2. Configure fingerprint: **Settings → Security → Fingerprint**
+3. Run: `npm run android`
 
-## App Flow
+### Test Deep Links
 
-### 1. Login Screen
+```bash
+# iOS
+xcrun simctl openurl booted lazorkit-ticket://test
 
-- User taps "Sign in with Face ID"
-- Face ID authenticates user
-- Passkey and smart wallet are created/restored
-- Navigates to Events screen
-
-### 2. Events Screen
-
-- Displays mock event (Summer Music Festival 2024)
-- Shows event details: date, time, location, price (50 USDC)
-- "Buy Ticket" button (or "View Ticket" if owned)
-- Navigates to Buy Ticket or My Ticket screen
-
-### 3. Buy Ticket Screen
-
-- Shows ticket details and total price
-- Displays "Gasless Transaction" info (0 fees)
-- User taps "Confirm with Face ID"
-- Face ID authentication required
-- Executes gasless USDC transfer and ticket creation
-- Navigates to My Ticket screen on success
-
-### 4. My Ticket Screen
-
-- Displays ticket details and status (Valid/Used)
-- Shows event information
-- "Enter Event" button (if ticket is valid)
-- Navigates to Entry Verification screen
-
-### 5. Entry Verification Screen
-
-- User taps "Verify Entry with Face ID"
-- Face ID authentication required
-- Passkey signs verification challenge
-- On-chain ticket ownership verified
-- Ticket marked as used on-chain
-- Shows "Entry Granted" or "Entry Denied"
-
-## On-Chain Data Model
-
-### Ticket PDA
-
-Each ticket is stored as a Program Derived Address (PDA):
-
-```
-Ticket PDA Structure:
-  seeds: ['ticket', ownerWallet, eventId]
-  data:
-    - used: boolean (u8)
-    - event_id: string
-    - owner_wallet: PublicKey (32 bytes)
+# Android
+adb shell am start -W -a android.intent.action.VIEW -d "lazorkit-ticket://test"
 ```
 
-**Properties**:
-- **Non-transferable**: PDA ownership cannot be transferred
-- **One per user**: Each user can have one ticket per event
-- **One-time use**: `used` flag prevents reuse
-- **On-chain**: Fully verifiable on Solana blockchain
+---
 
-## Important Notes
-
-### Demo Limitations
-
-This is a **demo app** for educational purposes:
-
-- Uses Solana Devnet (not mainnet)
-- Mock event data (hardcoded)
-- Uses real LazorKit SDK with portal-based authentication
-- Gasless transactions handled by LazorKit Paymaster
-- No backend server required (all on-chain)
-
-### Production Considerations
-
-For production use:
-
-- Replace mock event data with dynamic event system
-- Implement real Solana program for ticket management
-- Use mainnet or appropriate network
-- Add proper error handling and retries
-- Implement transaction confirmation waiting
-- Add loading states and user feedback
-- Handle network errors gracefully
-- Consider adding server-side challenge generation for entry verification
-
-## Understanding the Code
-
-### LazorKit Integration (`lib/lazorkit.ts`)
-
-Handles:
-- Biometric authentication checks
-- Passkey creation and restoration
-- Smart wallet derivation
-- Session management
-- Transaction signing with passkey
-
-**Note**: In production, this would use the real LazorKit React Native SDK. The demo simulates these flows.
-
-### Solana Helpers (`lib/solana.ts`)
-
-Handles:
-- Ticket PDA derivation
-- USDC transfer instructions
-- Ticket creation instructions
-- Ticket data fetching
-- On-chain verification
-
-**Note**: Uses Solana Devnet. Replace RPC URL for mainnet.
-
-### Paymaster Integration (`lib/paymaster.ts`)
-
-Handles:
-- Transaction sponsorship
-- Gas fee estimation (always 0 for user)
-- Sponsor address management
-
-**Note**: In production, this would call LazorKit Paymaster API.
-
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Face ID Not Working
 
@@ -268,27 +381,55 @@ Handles:
 
 - Check Solana Devnet connection
 - Verify wallet has USDC (use devnet faucet)
-- Check transaction signatures
-- Review error messages in console
+- Check transaction signatures in console
+- Review error messages
 
 ### Navigation Issues
 
-- Ensure Expo Router is configured correctly
-- Check route names match file names
-- Clear cache: `expo start --clear`
+```bash
+# Clear cache and restart
+expo start --clear
+```
 
-## Additional Resources
+### Build Errors
 
-- [LazorKit Documentation](https://docs.lazorkit.com) - Official LazorKit docs
+```bash
+# Clean install
+rm -rf node_modules package-lock.json
+npm install
+```
+
+---
+
+## 🎯 Live Demo
+
+The app is configured to run on **Solana Devnet** with a working frontend. To test:
+
+1. Start the app: `npm start`
+2. Sign in with Face ID
+3. Buy a ticket (requires USDC on Devnet)
+4. Verify entry with Face ID
+
+**Note**: For production, update network configuration to mainnet and use real USDC.
+
+---
+
+## 📖 Additional Resources
+
+- [LazorKit Documentation](https://docs.lazorkit.com) - Official SDK docs
 - [Solana Cookbook](https://solanacookbook.com) - Solana development guide
 - [Expo Documentation](https://docs.expo.dev) - Expo and React Native guides
 - [WebAuthn Guide](https://webauthn.guide) - Understanding WebAuthn/passkeys
 
-## License
+---
 
-This demo app is for educational purposes as part of the LazorKit bounty program.
+## 📝 License
 
-## Support
+This demo app is for educational purposes as part of the LazorKit example repository program.
+
+---
+
+## 🤝 Support
 
 For issues or questions:
 1. Check the [tutorials](./tutorials/) for detailed explanations
@@ -297,5 +438,4 @@ For issues or questions:
 
 ---
 
-**Built for LazorKit Bounty Program** | Demonstrating walletless, biometric-first experiences on Solana
-
+**Built with ❤️ using LazorKit | Demonstrating walletless, biometric-first experiences on Solana**

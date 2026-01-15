@@ -256,8 +256,26 @@ export async function updateTicketUsed(
 
 /**
  * Create USDC transfer instruction
- * Transfers USDC from user's wallet to event organizer
- * Handles both on-curve and off-curve (PDA) wallet addresses
+ * 
+ * Transfers USDC tokens from user's wallet to event organizer.
+ * This function creates Solana SPL Token transfer instructions.
+ * 
+ * Note: LazorKit smart wallets are PDAs (off-curve addresses).
+ * This function handles both on-curve and off-curve addresses gracefully.
+ * 
+ * @param fromWallet - User's wallet address (PublicKey)
+ * @param toWallet - Recipient wallet address (PublicKey, must be on-curve)
+ * @param amount - Amount in USDC (will be converted to smallest unit with 6 decimals)
+ * @returns Promise<any[]> - Array of TransactionInstruction objects
+ * 
+ * @example
+ * ```typescript
+ * const instructions = await createUSDCTransferInstruction(
+ *   userWallet,
+ *   organizerWallet,
+ *   50 // 50 USDC
+ * );
+ * ```
  */
 export async function createUSDCTransferInstruction(
   fromWallet: PublicKey,

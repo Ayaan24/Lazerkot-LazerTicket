@@ -125,8 +125,42 @@ export async function signWithPasskey(
 
 /**
  * Sign and send a transaction using LazorKit SDK
- * This will open the portal for transaction signing
- * Matches documentation format: signAndSendTransaction(payload, { redirectUrl, onSuccess?, onFail? })
+ * 
+ * This function wraps the LazorKit SDK's signAndSendTransaction method.
+ * It opens the LazorKit portal where the user authenticates with Face ID
+ * and signs the transaction with their passkey.
+ * 
+ * The transaction is gasless if feeToken is set to 'USDC' (Paymaster sponsors fees).
+ * 
+ * @param transactionData - Transaction payload with instructions and options
+ * @param transactionData.instructions - Array of Solana TransactionInstruction objects
+ * @param transactionData.transactionOptions - Transaction configuration
+ * @param transactionData.transactionOptions.feeToken - Token for gas fees ('USDC' for gasless)
+ * @param transactionData.transactionOptions.clusterSimulation - Network ('devnet' | 'mainnet')
+ * @param signAndSendFn - LazorKit SDK's signAndSendTransaction function from useWallet hook
+ * @param redirectUrl - Deep link URL to return to app after signing (default: lazorkit-ticket://callback)
+ * @param onSuccess - Optional callback when transaction succeeds
+ * @param onFail - Optional callback when transaction fails
+ * @returns Promise<string> - Transaction signature
+ * 
+ * @example
+ * ```typescript
+ * const { signAndSendTransaction } = useWallet();
+ * 
+ * const signature = await signAndSendTransactionWithPasskey(
+ *   {
+ *     instructions: [transferInstruction],
+ *     transactionOptions: {
+ *       feeToken: 'USDC',
+ *       clusterSimulation: 'devnet',
+ *     },
+ *   },
+ *   signAndSendTransaction,
+ *   'lazorkit-ticket://callback?screen=finance'
+ * );
+ * ```
+ * 
+ * @see https://docs.lazorkit.com for full API documentation
  */
 export async function signAndSendTransactionWithPasskey(
   transactionData: {
@@ -144,6 +178,8 @@ export async function signAndSendTransactionWithPasskey(
   onFail?: (error: Error) => void
 ): Promise<string> {
   try {
+    // Call LazorKit SDK's signAndSendTransaction
+    // This opens the portal, user authenticates with Face ID, transaction is signed
     const signature = await signAndSendFn(transactionData, {
       redirectUrl,
       onSuccess: (sig: string) => {
