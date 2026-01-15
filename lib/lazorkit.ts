@@ -96,25 +96,37 @@ export async function restoreWallet(): Promise<WalletInfo | null> {
 /**
  * Sign a message using LazorKit SDK
  * This will open the portal for signing
+ * Matches documentation format: signMessage(message, { redirectUrl, onSuccess?, onFail? })
  */
 export async function signWithPasskey(
   message: string,
   signMessageFn: (message: string, options: any) => Promise<any>,
-  redirectUrl: string = REDIRECT_URL
+  redirectUrl: string = REDIRECT_URL,
+  onSuccess?: (result: { signature: string; signedPayload: string }) => void,
+  onFail?: (error: Error) => void
 ): Promise<string> {
   try {
     const result = await signMessageFn(message, {
       redirectUrl,
+      onSuccess: (res: { signature: string; signedPayload: string }) => {
+        if (onSuccess) onSuccess(res);
+      },
+      onFail: (err: Error) => {
+        if (onFail) onFail(err);
+      },
     });
     return result.signature;
   } catch (error: any) {
-    throw new Error(error.message || 'Failed to sign message');
+    const err = new Error(error.message || 'Failed to sign message');
+    if (onFail) onFail(err);
+    throw err;
   }
 }
 
 /**
  * Sign and send a transaction using LazorKit SDK
  * This will open the portal for transaction signing
+ * Matches documentation format: signAndSendTransaction(payload, { redirectUrl, onSuccess?, onFail? })
  */
 export async function signAndSendTransactionWithPasskey(
   transactionData: {
@@ -122,19 +134,30 @@ export async function signAndSendTransactionWithPasskey(
     transactionOptions: {
       feeToken?: string;
       computeUnitLimit?: number;
+      addressLookupTableAccounts?: any[];
       clusterSimulation: 'devnet' | 'mainnet';
     };
   },
   signAndSendFn: (payload: any, options: any) => Promise<string>,
-  redirectUrl: string = REDIRECT_URL
+  redirectUrl: string = REDIRECT_URL,
+  onSuccess?: (signature: string) => void,
+  onFail?: (error: Error) => void
 ): Promise<string> {
   try {
     const signature = await signAndSendFn(transactionData, {
       redirectUrl,
+      onSuccess: (sig: string) => {
+        if (onSuccess) onSuccess(sig);
+      },
+      onFail: (err: Error) => {
+        if (onFail) onFail(err);
+      },
     });
     return signature;
   } catch (error: any) {
-    throw new Error(error.message || 'Failed to sign and send transaction');
+    const err = new Error(error.message || 'Failed to sign and send transaction');
+    if (onFail) onFail(err);
+    throw err;
   }
 }
 
