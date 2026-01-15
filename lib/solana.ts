@@ -257,6 +257,7 @@ export async function updateTicketUsed(
 /**
  * Create USDC transfer instruction
  * Transfers USDC from user's wallet to event organizer
+ * Handles both on-curve and off-curve (PDA) wallet addresses
  */
 export async function createUSDCTransferInstruction(
   fromWallet: PublicKey,
@@ -264,49 +265,87 @@ export async function createUSDCTransferInstruction(
   amount: number // Amount in USDC (with 6 decimals)
 ): Promise<any[]> {
   const usdcMint = new PublicKey(USDC_MINT_ADDRESS);
-  
-  // Get associated token accounts
-  const fromTokenAccount = await getAssociatedTokenAddress(
-    usdcMint,
-    fromWallet
-  );
-  
-  const toTokenAccount = await getAssociatedTokenAddress(
-    usdcMint,
-    toWallet
-  );
+  const instructions: any[] = [];
 
-  const instructions = [];
+  try {
+    // Validate wallets are on-curve for token accounts
+    // LazorKit smart wallets are PDAs (off-curve), so we need to handle this differently
+    const fromWalletOnCurve = PublicKey.isOnCurve(fromWallet.toBuffer());
+    const toWalletOnCurve = PublicKey.isOnCurve(toWallet.toBuffer());
 
-  // Check if recipient token account exists, create if not
-  const toAccountInfo = await connection.getAccountInfo(toTokenAccount);
-  if (!toAccountInfo) {
+    let fromTokenAccount: PublicKey;
+    let toTokenAccount: PublicKey;
+
+    // Get associated token accounts
+    // For off-curve addresses (PDAs), we'll try to get the token account
+    // If it fails, we'll need to handle it differently
+    try {
+      fromTokenAccount = await getAssociatedTokenAddress(
+        usdcMint,
+        fromWallet
+      );
+    } catch (error: any) {
+      if (error?.name === 'TokenOwnerOffCurveError' || 
+          error?.message?.includes('TokenOwnerOffCurveError')) {
+        throw new Error(
+          'Smart wallet token accounts are not yet supported. ' +
+          'Please use a standard wallet address for USDC transfers.'
+        );
+      }
+      throw error;
+    }
+
+    try {
+      toTokenAccount = await getAssociatedTokenAddress(
+        usdcMint,
+        toWallet
+      );
+    } catch (error: any) {
+      if (error?.name === 'TokenOwnerOffCurveError' || 
+          error?.message?.includes('TokenOwnerOffCurveError')) {
+        throw new Error(
+          'Recipient wallet address must be a valid on-curve address for token transfers.'
+        );
+      }
+      throw error;
+    }
+
+    // Check if recipient token account exists, create if not
+    const toAccountInfo = await connection.getAccountInfo(toTokenAccount);
+    if (!toAccountInfo) {
+      instructions.push(
+        createAssociatedTokenAccountInstruction(
+          fromWallet, // payer
+          toTokenAccount, // associatedToken
+          toWallet, // owner
+          usdcMint // mint
+        )
+      );
+    }
+
+    // Create transfer instruction
+    // Amount in smallest unit (6 decimals for USDC)
+    const transferAmount = amount * 1_000_000;
+    
     instructions.push(
-      createAssociatedTokenAccountInstruction(
-        fromWallet, // payer
-        toTokenAccount, // associatedToken
-        toWallet, // owner
-        usdcMint // mint
+      createTransferInstruction(
+        fromTokenAccount,
+        toTokenAccount,
+        fromWallet,
+        transferAmount,
+        [],
+        TOKEN_PROGRAM_ID
       )
     );
+
+    return instructions;
+  } catch (error: any) {
+    console.error('Error creating USDC transfer instruction:', error);
+    throw new Error(
+      error.message || 
+      'Failed to create transfer instruction. Please ensure wallet addresses are valid.'
+    );
   }
-
-  // Create transfer instruction
-  // Amount in smallest unit (6 decimals for USDC)
-  const transferAmount = amount * 1_000_000;
-  
-  instructions.push(
-    createTransferInstruction(
-      fromTokenAccount,
-      toTokenAccount,
-      fromWallet,
-      transferAmount,
-      [],
-      TOKEN_PROGRAM_ID
-    )
-  );
-
-  return instructions;
 }
 
 /**
@@ -320,7 +359,7 @@ export async function createTicketInstruction(
 ): Promise<any[]> {
   const [ticketPDA, bump] = deriveTicketPDA(ownerWallet, eventId);
   
-  const instructions = [];
+  const instructions: any[] = [];
 
   // In production, this would create an instruction to initialize the ticket PDA
   // For demo: create a simple account with ticket data
@@ -359,7 +398,7 @@ export async function markTicketUsedInstruction(
 ): Promise<any[]> {
   const ticketPDA = getTicketPDA(ownerWallet, eventId);
   
-  const instructions = [];
+  const instructions: any[] = [];
 
   // In production, this would call a program instruction to mark ticket as used
   // For demo: update account data directly

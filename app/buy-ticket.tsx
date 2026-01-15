@@ -51,7 +51,7 @@ export default function BuyTicketScreen() {
   const [checkingBalance, setCheckingBalance] = useState(false);
   const [authenticating, setAuthenticating] = useState(false);
   
-  const organizerWallet = new PublicKey('11111111111111111111111111111112');
+  const organizerWallet = new PublicKey('BZkqZhJSsuZDJHHvXgizsj46oScPFahBcKVGPV8RA4nk');
 
   useEffect(() => {
     initializeWallet();
