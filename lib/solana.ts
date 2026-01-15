@@ -22,13 +22,22 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Constants
-const SOLANA_RPC_URL = 'https://api.devnet.solana.com';
+// Using Helius RPC for better reliability (fallback to public RPC)
+const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 const USDC_MINT_ADDRESS = '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU'; // Devnet USDC
 // Demo ticket program ID - using a valid Solana address format (System Program as placeholder)
 // In production, this would be your deployed program ID
 const TICKET_PROGRAM_ID = new PublicKey('11111111111111111111111111111111'); // Using System Program for demo
 
-export const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
+// Create connection with multiple commitment levels support
+// Using public RPC - if you have access to Helius/QuickNode, use those for better indexing
+export const connection = new Connection(SOLANA_RPC_URL, {
+  commitment: 'confirmed',
+  confirmTransactionInitialTimeout: 60000,
+  httpHeaders: {
+    'Content-Type': 'application/json',
+  },
+});
 
 // Demo ticket storage key prefix (for AsyncStorage)
 const TICKET_STORAGE_PREFIX = 'demo_ticket_';
@@ -430,46 +439,219 @@ export async function markTicketUsedInstruction(
 
 /**
  * Get USDC balance for a wallet
+ * Supports both on-curve wallets and PDAs (like LazorKit smart wallets)
+ * Uses getParsedTokenAccountsByOwner for PDAs to avoid TokenOwnerOffCurveError
  */
 export async function getUSDCBalance(wallet: PublicKey): Promise<number> {
   try {
     const usdcMint = new PublicKey(USDC_MINT_ADDRESS);
+    const usdcMintString = usdcMint.toBase58();
     
-    // Validate wallet is a valid on-curve public key
-    if (!PublicKey.isOnCurve(wallet.toBuffer())) {
-      console.warn('Wallet address is not on-curve, returning 0 balance');
-      return 0;
-    }
+    // Check if wallet is a PDA (off-curve)
+    const isPDA = !PublicKey.isOnCurve(wallet.toBuffer());
     
-    const tokenAccount = await getAssociatedTokenAddress(
-      usdcMint,
-      wallet
-    );
-
-    try {
-      // Use SPL Token library to get account info
-      const account = await getAccount(connection, tokenAccount);
-      // Convert from smallest unit (6 decimals for USDC) to USDC
-      return Number(account.amount) / 1_000_000;
-    } catch (accountError: any) {
-      // Account doesn't exist yet or other errors
-      if (accountError?.message?.includes('InvalidAccountData') || 
-          accountError?.message?.includes('could not find account') ||
-          accountError?.message?.includes('TokenOwnerOffCurveError') ||
-          accountError?.name === 'TokenOwnerOffCurveError') {
+    if (isPDA) {
+      // For PDAs, manually derive the Associated Token Account (ATA) address
+      // ATA is derived using: findProgramAddress([owner, TOKEN_PROGRAM_ID, mint], ASSOCIATED_TOKEN_PROGRAM_ID)
+      // Note: RPC indexing can be delayed, so we try multiple methods and commitment levels
+      try {
+        console.log('=== Getting USDC balance for PDA wallet ===');
+        console.log('Wallet:', wallet.toBase58());
+        console.log('USDC Mint:', usdcMintString);
+        
+        // Method 1: Try to derive ATA address manually using findProgramAddress
+        // Seeds for ATA: [owner, TOKEN_PROGRAM_ID, mint]
+        const [ataAddress] = PublicKey.findProgramAddressSync(
+          [
+            wallet.toBuffer(),
+            TOKEN_PROGRAM_ID.toBuffer(),
+            usdcMint.toBuffer(),
+          ],
+          ASSOCIATED_TOKEN_PROGRAM_ID
+        );
+        
+        console.log('Derived ATA address:', ataAddress.toBase58());
+        
+        // Try to get the account info directly with multiple commitment levels and retries
+        // Note: Public RPC may have indexing delays - Solscan uses faster indexed RPCs
+        let accountFound = false;
+        const commitments: Array<'confirmed' | 'finalized'> = ['finalized', 'confirmed'];
+        
+        for (const commitment of commitments) {
+          for (let retry = 0; retry < 2; retry++) {
+            try {
+              const accountInfo = await connection.getAccountInfo(ataAddress, commitment);
+              if (accountInfo && accountInfo.data && accountInfo.data.length > 0) {
+                // Parse the token account data
+                // Use SPL Token library to parse it properly
+                try {
+                  const account = await getAccount(connection, ataAddress, commitment);
+                  const balance = Number(account.amount) / 1_000_000; // USDC has 6 decimals
+                  console.log(`✅ USDC balance found (PDA - direct query, ${commitment}):`, balance, 'USDC');
+                  accountFound = true;
+                  return balance;
+                } catch (parseError: any) {
+                  console.warn(`Error parsing token account data (${commitment}, retry ${retry}):`, parseError?.message);
+                  if (retry < 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+                    continue;
+                  }
+                }
+              } else {
+                console.log(`ATA account not found with ${commitment} commitment (retry ${retry})`);
+              }
+            } catch (accountError: any) {
+              console.warn(`Error getting ATA account info (${commitment}, retry ${retry}):`, accountError?.message);
+              if (retry < 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+                continue;
+              }
+            }
+            break; // Exit retry loop if we got a result (even if null)
+          }
+        }
+        
+        if (!accountFound) {
+          console.log('⚠️ ATA account not found at derived address:', ataAddress.toBase58());
+          console.log('💡 Note: If Solscan shows balance but RPC returns 0, this is likely an RPC indexing delay.');
+          console.log('💡 Consider using a faster RPC endpoint (Helius, QuickNode) for better indexing.');
+        }
+        
+        // Method 2: Fallback - Query all token accounts by owner with multiple commitment levels
+        console.log('Fallback: Querying all token accounts for PDA wallet');
+        let tokenAccounts: any[] = [];
+        
+        // Try with different commitment levels
+        for (const commitment of ['confirmed', 'finalized'] as const) {
+          try {
+            const response = await connection.getParsedTokenAccountsByOwner(
+              wallet,
+              {
+                programId: TOKEN_PROGRAM_ID,
+              },
+              commitment
+            );
+            
+            if (response.value && response.value.length > 0) {
+              tokenAccounts = response.value;
+              console.log(`Found ${tokenAccounts.length} token account(s) with ${commitment} commitment`);
+              break;
+            }
+          } catch (err: any) {
+            console.warn(`Error querying with ${commitment} commitment:`, err?.message);
+          }
+        }
+        
+        // Also try with mint filter
+        if (tokenAccounts.length === 0) {
+          try {
+            const response = await connection.getParsedTokenAccountsByOwner(
+              wallet,
+              {
+                mint: usdcMint,
+              },
+              'finalized'
+            );
+            if (response.value && response.value.length > 0) {
+              tokenAccounts = response.value;
+              console.log(`Found ${tokenAccounts.length} token account(s) with mint filter`);
+            }
+          } catch (err: any) {
+            console.warn('Error querying with mint filter:', err?.message);
+          }
+        }
+        
+        // tokenAccounts is already set above, no need to redeclare
+        
+        if (tokenAccounts && tokenAccounts.length > 0) {
+          // Log all token accounts for debugging
+          tokenAccounts.forEach((account: any, index: number) => {
+            const parsedInfo = account.account?.data?.parsed?.info;
+            if (parsedInfo) {
+              console.log(`Token account ${index}:`, {
+                pubkey: account.pubkey.toBase58(),
+                mint: parsedInfo.mint,
+                owner: parsedInfo.owner,
+                amount: parsedInfo.tokenAmount?.amount,
+                decimals: parsedInfo.tokenAmount?.decimals,
+              });
+            }
+          });
+          
+          // Find the USDC token account by matching mint address
+          const usdcAccount = tokenAccounts.find(
+            (account: { pubkey: PublicKey; account: any }) => {
+              const parsedInfo = account.account?.data?.parsed?.info;
+              const mint = parsedInfo?.mint;
+              const matches = mint === usdcMintString;
+              if (matches) {
+                console.log('Found USDC account:', account.pubkey.toBase58());
+              }
+              return matches;
+            }
+          );
+          
+          if (usdcAccount) {
+            const parsedInfo = usdcAccount.account?.data?.parsed?.info;
+            if (parsedInfo?.tokenAmount) {
+              // Convert from smallest unit (6 decimals for USDC) to USDC
+              const amount = parsedInfo.tokenAmount.amount;
+              const decimals = parsedInfo.tokenAmount.decimals || 6;
+              const balance = Number(amount) / Math.pow(10, decimals);
+              console.log('USDC balance found (PDA - parsed accounts):', balance, 'USDC');
+              return balance;
+            }
+          }
+        }
+        
+        console.log('No USDC token account found for PDA wallet', wallet.toBase58());
+        return 0;
+      } catch (pdaError: any) {
+        console.error('Error querying token accounts for PDA:', pdaError?.message || pdaError);
+        console.error('Full error:', JSON.stringify(pdaError, null, 2));
         return 0;
       }
-      // Log but don't throw - return 0 for any other errors
-      console.warn('Error getting USDC account:', accountError?.message || accountError);
-      return 0;
+    } else {
+      // For on-curve wallets, use the standard method
+      let tokenAccount: PublicKey;
+      try {
+        tokenAccount = await getAssociatedTokenAddress(
+          usdcMint,
+          wallet
+        );
+      } catch (error: any) {
+        if (error?.name === 'TokenOwnerOffCurveError' || 
+            error?.message?.includes('TokenOwnerOffCurveError')) {
+          console.warn('TokenOwnerOffCurveError: Cannot derive token account');
+          return 0;
+        }
+        throw error;
+      }
+
+      try {
+        // Use SPL Token library to get account info
+        const account = await getAccount(connection, tokenAccount);
+        // Convert from smallest unit (6 decimals for USDC) to USDC
+        const balance = Number(account.amount) / 1_000_000;
+        console.log('USDC balance found:', balance, 'for wallet', wallet.toBase58());
+        return balance;
+      } catch (accountError: any) {
+        // Account doesn't exist yet or other errors
+        if (accountError?.message?.includes('InvalidAccountData') || 
+            accountError?.message?.includes('could not find account') ||
+            accountError?.message?.includes('TokenAccountNotFoundError') ||
+            accountError?.name === 'TokenAccountNotFoundError') {
+          // Token account doesn't exist yet - this is normal for new wallets
+          console.log('USDC token account does not exist yet for wallet', wallet.toBase58());
+          return 0;
+        }
+        // Log but don't throw - return 0 for any other errors
+        console.warn('Error getting USDC account:', accountError?.message || accountError);
+        return 0;
+      }
     }
   } catch (error: any) {
-    // Handle TokenOwnerOffCurveError or other errors gracefully
-    if (error?.name === 'TokenOwnerOffCurveError' || 
-        error?.message?.includes('TokenOwnerOffCurveError')) {
-      console.warn('TokenOwnerOffCurveError: Wallet may not support token accounts yet');
-      return 0;
-    }
+    // Handle any other errors gracefully
     console.warn('Error getting USDC balance:', error?.message || error);
     return 0;
   }

@@ -23,7 +23,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useWallet } from '@lazorkit/wallet-mobile-adapter';
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { connection } from '@/lib/solana';
+import { connection, getUSDCBalance } from '@/lib/solana';
 import { LAZORKIT_REDIRECT_URL } from '@/lib/lazorkit';
 import { getWalletAddress } from '@/lib/secure-storage';
 import Header from '@/components/Header';
@@ -60,6 +60,7 @@ export default function FinanceScreen() {
   
   // State management
   const [solBalance, setSolBalance] = useState<number>(0);
+  const [usdcBalance, setUsdcBalance] = useState<number>(0);
   const [usdBalance, setUsdBalance] = useState<string>('0.00');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -90,9 +91,9 @@ export default function FinanceScreen() {
     }
   }
 
-  // Check wallet connection
+  // Check wallet connection and refresh balance when wallet changes
   useEffect(() => {
-    // Check if we have wallet from SDK
+    // Check if we have wallet from SDK (prioritize SDK wallet as per LazorKit docs)
     if (wallet?.smartWallet) {
       console.log('Wallet from SDK:', wallet.smartWallet);
       setStoredWalletAddress(wallet.smartWallet);
@@ -112,24 +113,36 @@ export default function FinanceScreen() {
       router.replace('/login');
       return;
     }
-  }, [isConnected, wallet, storedWalletAddress]);
+  }, [isConnected, wallet?.smartWallet, storedWalletAddress]);
 
-  // Fetch SOL balance with wallet address
+  // Fetch SOL and USDC balances with wallet address
   async function fetchBalanceWithAddress(address: string) {
     if (!address) return;
     
     try {
       setLoading(true);
       const publicKey = new PublicKey(address);
+      
+      // Fetch SOL balance
       const balance = await connection.getBalance(publicKey);
       const solAmount = balance / LAMPORTS_PER_SOL;
       setSolBalance(solAmount);
       
-      // Estimate USD value (using approximate $150 per SOL for demo)
-      // In production, fetch real-time price from an API
-      const estimatedUsd = solAmount * 150;
+      // Fetch USDC balance
+      try {
+        const usdcAmount = await getUSDCBalance(publicKey);
+        setUsdcBalance(usdcAmount);
+        console.log('USDC Balance fetched:', usdcAmount, 'USDC');
+      } catch (usdcError) {
+        console.warn('Error fetching USDC balance:', usdcError);
+        setUsdcBalance(0);
+      }
+      
+      // Estimate USD value (using approximate $150 per SOL and $1 per USDC for demo)
+      // In production, fetch real-time prices from an API
+      const estimatedUsd = (solAmount * 150) + usdcBalance;
       setUsdBalance(estimatedUsd.toFixed(2));
-      console.log('Balance fetched:', solAmount, 'SOL');
+      console.log('Balance fetched:', solAmount, 'SOL,', usdcBalance, 'USDC');
     } catch (error) {
       console.error('Error fetching balance:', error);
       Alert.alert('Error', 'Failed to fetch wallet balance');
@@ -148,6 +161,7 @@ export default function FinanceScreen() {
 
   // Handle send transaction
   async function handleSend() {
+    // Always prioritize SDK wallet address (wallet.smartWallet) as per LazorKit docs
     const walletAddress = wallet?.smartWallet || storedWalletAddress;
     
     if (!walletAddress || !recipientAddress || !sendAmount) {
@@ -204,8 +218,13 @@ export default function FinanceScreen() {
             setShowSendModal(false);
             setRecipientAddress('');
             setSendAmount('');
-            // Refresh balance after a short delay
-            setTimeout(() => fetchBalance(), 2000);
+            // Refresh balance after a short delay to allow transaction to confirm
+            setTimeout(() => {
+              const address = wallet?.smartWallet || storedWalletAddress;
+              if (address) {
+                fetchBalanceWithAddress(address);
+              }
+            }, 3000);
           },
           onFail: (error: { message: any; }) => {
             console.error('Transaction failed:', error);
@@ -248,13 +267,23 @@ export default function FinanceScreen() {
 
   const wallets: Wallet[] = [
     {
-      id: 'lazorkit',
+      id: 'lazorkit-sol',
       name: 'LazorKit',
       symbol: 'SOL',
       amount: solBalance.toFixed(4),
-      balance: usdBalance,
+      balance: (solBalance * 150).toFixed(2),
       change: 0,
       color: '#FFFFFF',
+      logo: require('@/assets/logo.png'),
+    },
+    {
+      id: 'lazorkit-usdc',
+      name: 'USDC',
+      symbol: 'USDC',
+      amount: usdcBalance.toFixed(2),
+      balance: usdcBalance.toFixed(2),
+      change: 0,
+      color: '#2775CA',
       logo: require('@/assets/logo.png'),
     },
   ];
@@ -347,7 +376,10 @@ export default function FinanceScreen() {
           ) : (
             <>
               <Text style={styles.balanceAmount}>${usdBalance}</Text>
-              <Text style={styles.solBalance}>{solBalance.toFixed(4)} SOL</Text>
+              <View style={styles.balanceDetails}>
+                <Text style={styles.solBalance}>{solBalance.toFixed(4)} SOL</Text>
+                <Text style={styles.usdcBalance}>{usdcBalance.toFixed(2)} USDC</Text>
+              </View>
             </>
           )}
           
@@ -817,11 +849,20 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
+  balanceDetails: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 16,
+  },
   solBalance: {
     fontSize: 18,
     color: '#FFFFFF',
     opacity: 0.7,
-    marginBottom: 16,
+  },
+  usdcBalance: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    opacity: 0.7,
   },
   modalOverlay: {
     flex: 1,
